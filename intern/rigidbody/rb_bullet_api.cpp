@@ -4,28 +4,35 @@
 
 /** \file
  * \ingroup intern_rigidbody
- * \brief 基于 Bullet 的刚体（Rigid Body）API 实现
+ * \brief Rigid Body API implementation for Bullet
  */
 
 /*
- * Bullet 连续碰撞检测与物理库
+ * Bullet Continuous Collision Detection and Physics Library
  * Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
  *
- * 本软件按“原样”提供，不提供任何明示或暗示的担保。在任何情况下，作者均不对因使用本软件而产生的任何损害承担责任。
- * 任何人均可出于任何目的使用、修改和重新分发本软件（包括商业用途），但须遵守以下限制：
+ * This software is provided 'as-is', without any express or implied warranty. In no event will the
+ * authors be held liable for any damages arising from the use of this software. Permission is
+ * granted to anyone to use this software for any purpose, including commercial applications, and
+ * to alter it and redistribute it freely, subject to the following restrictions:
  *
- * 1. 不得歪曲软件的原始出处；若在产品中使用该软件，不得声称自己编写了原始软件。
- *    若在产品文档中致谢原作者，虽属可取但非强制。
- * 2. 修改后的源代码必须明确标注为已修改，不得将其错误地表示为原始软件。
- * 3. 本声明不得从任何源代码分发中删除或更改。
+ * 1. The origin of this software must not be misrepresented; you must not claim that you wrote the
+ *    original software. If you use this software in a product, an acknowledgment in the product
+ *    documentation would be appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+ *    being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
  */
 
-/* 本文件为 Bullet 物理引擎定义了“刚体接口”。
- * 该 API 设计用于 Blender 的 C 代码，以作为刚体模拟系统的一部分。
+/* This file defines the "RigidBody interface" for the
+ * Bullet Physics Engine. This API is designed to be used
+ * from C-code in Blender as part of the Rigid Body simulation
+ * system.
  *
- * 它基于 Bullet 的 C-API，但经过大量修改以支持更多数据类型并提供更友好的接口。
+ * It is based on the Bullet C-API, but is heavily modified to
+ * give access to more data types and to offer a nicer interface.
  *
- * -- Joshua Leung, 2010 年 6 月
+ * -- Joshua Leung, June 2010
  */
 
 #include <cerrno>
