@@ -125,7 +125,7 @@ static void blender_version_init()
   const char *version_suffix = BKE_blender_version_is_lts() ? " LTS" : "";
 
   SNPRINTF(blender_version_string,
-           "XF BL %d.%01d.%d%s%s",
+           "%d.%01d.%d%s%s",
            BLENDER_VERSION / 100,
            BLENDER_VERSION % 100,
            BLENDER_VERSION_PATCH,
@@ -133,7 +133,7 @@ static void blender_version_init()
            version_cycle);
 
   SNPRINTF(blender_version_string_compact,
-           "XF BL %d.%01d.%d%s%s",
+           "%d.%01d.%d%s",
            BLENDER_VERSION / 100,
            BLENDER_VERSION % 100,
            BLENDER_VERSION_PATCH,
