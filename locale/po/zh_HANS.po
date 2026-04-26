@@ -133,11 +133,13 @@ msgid "F-Curves in this group"
 msgstr "当前组中的函数曲线"
 
 
-msgid "Collision Collections:"
-msgstr "碰撞集合："
+msgid "Collision Group Mask:"
+msgstr "碰撞组遮罩："
+
 
 msgid "Collision Group"
 msgstr "碰撞组"
+
 
 msgid "Color Set"
 msgstr "配色集"

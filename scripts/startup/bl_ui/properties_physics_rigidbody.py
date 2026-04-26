@@ -246,14 +246,22 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
 
         col = layout.column(align=True)
 
-        col.label(text="Collision Collections:")
+        col.label(text="Collision Group Mask:")
         c = col.row(align=True)
-        for i in range(10):
-            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
-        c = col.row(align=True)
-        for i in range(10, 20):
+        for i in range(5):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
+        c = col.row(align=True)
+        for i in range(5, 10):
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
+        
+        c = col.row(align=True)
+        for i in range(10, 15):
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
+
+        c = col.row(align=True)
+        for i in range(15, 20):
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"
