@@ -242,7 +242,17 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         ob = context.object
         rbo = ob.rigid_body
 
-        layout.prop(rbo, "collision_collections", text="")
+        layout.prop(rbo, "xf_col_group_idx", text="Collision Group")
+
+        col = layout.column(align=True)
+
+        col.label(text="Collision Collections:")
+        c = col.row(align=True)
+        for i in range(10):
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
+        c = col.row(align=True)
+        for i in range(10, 20):
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):

@@ -1239,6 +1239,8 @@ RigidBodyOb *BKE_rigidbody_create_object(Scene *scene, Object *ob, short type)
 
   rbo->col_groups = 1;
 
+  rbo->xf_col_group_idx = 0;
+
   /* use triangle meshes for passive objects
    * use convex hulls for active objects since dynamic triangle meshes are very unstable
    */

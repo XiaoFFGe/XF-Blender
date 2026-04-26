@@ -1207,6 +1207,14 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
       prop, "Collision Collections", "Collision collections rigid body belongs to");
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
+
+  prop = RNA_def_property(srna, "xf_col_group_idx", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "xf_col_group_idx");
+  RNA_def_property_range(prop, 0, 19);
+  RNA_def_property_int_default(prop, 0);
+  RNA_def_property_ui_text(
+      prop, "XF Collision Group Index", "Custom collision group index for XF rigid body system");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
 }
 
 static void rna_def_rigidbody_constraint(BlenderRNA *brna)
