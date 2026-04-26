@@ -115,6 +115,7 @@ typedef struct RigidBodyOb {
   int flag;
   /** Collision groups that determines which rigid bodies can collide with each other. */
   int col_groups;
+
   /** (eRigidBody_MeshSource) mesh source for mesh based collision shapes. */
   short mesh_source;
   char _pad[2];
