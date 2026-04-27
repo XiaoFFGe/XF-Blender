@@ -52,6 +52,11 @@
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
 
+#include <iostream>
+using namespace std;
+
+
+
 struct rbDynamicsWorld {
   btDiscreteDynamicsWorld *dynamicsWorld;
   btDefaultCollisionConfiguration *collisionConfiguration;
@@ -63,6 +68,7 @@ struct rbDynamicsWorld {
 struct rbRigidBody {
   btRigidBody *body;
   int col_groups;
+  int xf_col_group_idx;
 };
 
 struct rbVert {
@@ -93,12 +99,28 @@ struct rbFilterCallback : public btOverlapFilterCallback {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
 
-    bool collides;
-    collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
+    bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
     collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
     collides = collides && (rb0->col_groups & rb1->col_groups);
 
-    return collides;
+    if (!collides) {
+      return false;
+    }
+
+    cout << "rb1 col_groups: " << rb1->col_groups << endl;
+    cout << "rb1 xf_col_group_idx: " << rb1->xf_col_group_idx << endl;
+
+    cout << "rb0 col_groups: " << rb0->col_groups << endl;
+    cout << "rb0 xf_col_group_idx: " << rb0->xf_col_group_idx << endl;
+
+    bool rb0_blacklist_contains_rb1 = (rb0->col_groups & (1 << rb1->xf_col_group_idx)) != 0;
+    bool rb1_blacklist_contains_rb0 = (rb1->col_groups & (1 << rb0->xf_col_group_idx)) != 0;
+
+    if (rb0_blacklist_contains_rb1 || rb1_blacklist_contains_rb0) {
+      return false;
+    }
+
+    return true;
   }
 };
 
@@ -227,10 +249,11 @@ void RB_dworld_export(rbDynamicsWorld *world, const char *filename)
 
 /* Setup ---------------------------- */
 
-void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups)
+void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups, int xf_col_group_idx)
 {
   btRigidBody *body = object->body;
   object->col_groups = col_groups;
+  object->xf_col_group_idx = xf_col_group_idx;
 
   world->dynamicsWorld->addRigidBody(body);
 }

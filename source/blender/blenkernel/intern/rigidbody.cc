@@ -772,7 +772,8 @@ static void rigidbody_validate_sim_object(RigidBodyWorld *rbw, Object *ob, bool 
   if (rbw && rbw->shared->runtime->physics_world && rbo->shared->physics_object) {
     RB_dworld_add_body(rbw->shared->runtime->physics_world,
                        static_cast<rbRigidBody *>(rbo->shared->physics_object),
-                       rbo->col_groups);
+                       rbo->col_groups,
+                       rbo->xf_col_group_idx);
   }
 }
 
@@ -1237,7 +1238,7 @@ RigidBodyOb *BKE_rigidbody_create_object(Scene *scene, Object *ob, short type)
   rbo->lin_damping = 0.04f;
   rbo->ang_damping = 0.1f;
 
-  rbo->col_groups = 1;
+  rbo->col_groups = 0;
 
   rbo->xf_col_group_idx = 0;
 
