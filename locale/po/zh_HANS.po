@@ -139,6 +139,11 @@ msgstr "碰撞集合："
 msgid "Collision Group"
 msgstr "碰撞组"
 
+
+msgid "Whitelist mode"
+msgstr "白名单模式"
+
+
 msgid "Color Set"
 msgstr "配色集"
 

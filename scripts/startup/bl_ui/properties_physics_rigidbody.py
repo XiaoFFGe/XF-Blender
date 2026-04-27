@@ -246,22 +246,25 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
 
         col = layout.column(align=True)
 
-        col.label(text="Collision Group Mask:")
+        col.label(text="Collision Collections:")
+
+        col.prop(context.scene, "xf_col_group_whitelist", text="Whitelist mode")
+
         c = col.row(align=True)
         for i in range(5):
-            c.prop(rbo, "xf_col_group_mask", index=i, text=str(i), toggle=True)
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
         c = col.row(align=True)
         for i in range(5, 10):
-            c.prop(rbo, "xf_col_group_mask", index=i, text=str(i), toggle=True)
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
         
         c = col.row(align=True)
         for i in range(10, 15):
-            c.prop(rbo, "xf_col_group_mask", index=i, text=str(i), toggle=True)
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
         c = col.row(align=True)
         for i in range(15, 20):
-            c.prop(rbo, "xf_col_group_mask", index=i, text=str(i), toggle=True)
+            c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"

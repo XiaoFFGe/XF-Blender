@@ -64,6 +64,7 @@ struct rbDynamicsWorld {
   btBroadphaseInterface *pairCache;
   btConstraintSolver *constraintSolver;
   btOverlapFilterCallback *filterCallback;
+  int whitelist;
 };
 struct rbRigidBody {
   btRigidBody *body;
@@ -95,6 +96,10 @@ struct rbCollisionShape {
 };
 
 struct rbFilterCallback : public btOverlapFilterCallback {
+  int whitelist;
+
+  rbFilterCallback(int whitelist_val) : whitelist(whitelist_val) {}
+
   bool needBroadphaseCollision(btBroadphaseProxy *proxy0, btBroadphaseProxy *proxy1) const override
   {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
@@ -104,7 +109,12 @@ struct rbFilterCallback : public btOverlapFilterCallback {
     bool noBulletMatch1 = (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask) == 0;
     bool noCustomMatch = (rb0->col_groups & rb1->col_groups) == 0;
 
-    return noBulletMatch0 || noBulletMatch1 || noCustomMatch;
+    if (whitelist) {
+      return !(noBulletMatch0 || noBulletMatch1 || noCustomMatch);
+    }
+    else {
+      return noBulletMatch0 || noBulletMatch1 || noCustomMatch;
+    }
   }
 };
 
@@ -127,7 +137,7 @@ static inline void copy_quat_btquat(float quat[4], const btQuaternion &btquat)
 
 /* Setup ---------------------------- */
 
-rbDynamicsWorld *RB_dworld_new(const float gravity[3])
+rbDynamicsWorld *RB_dworld_new(const float gravity[3], int whitelist)
 {
   rbDynamicsWorld *world = new rbDynamicsWorld;
 
@@ -139,7 +149,8 @@ rbDynamicsWorld *RB_dworld_new(const float gravity[3])
 
   world->pairCache = new btDbvtBroadphase();
 
-  world->filterCallback = new rbFilterCallback();
+  world->whitelist = whitelist;
+  world->filterCallback = new rbFilterCallback(whitelist);
   world->pairCache->getOverlappingPairCache()->setOverlapFilterCallback(world->filterCallback);
 
   /* constraint solving */

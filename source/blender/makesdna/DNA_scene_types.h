@@ -2232,6 +2232,9 @@ typedef struct Scene {
   struct SceneGpencil grease_pencil_settings;
   struct SceneHydra hydra;
 
+  char xf_col_group_whitelist;
+  char _pad10[7];
+
   SceneRuntimeHandle *runtime;
   void *_pad9;
 } Scene;

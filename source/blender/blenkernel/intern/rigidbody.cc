@@ -1115,7 +1115,7 @@ void BKE_rigidbody_validate_sim_world(Scene *scene, RigidBodyWorld *rbw, bool re
     if (rbw->shared->runtime->physics_world) {
       RB_dworld_delete(rbw->shared->runtime->physics_world);
     }
-    rbw->shared->runtime->physics_world = RB_dworld_new(scene->physics_settings.gravity);
+    rbw->shared->runtime->physics_world = RB_dworld_new(scene->physics_settings.gravity, scene->xf_col_group_whitelist);
   }
 
   RB_dworld_set_solver_iterations(rbw->shared->runtime->physics_world, rbw->num_solver_iterations);

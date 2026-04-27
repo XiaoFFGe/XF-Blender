@@ -50,7 +50,7 @@ typedef struct rbConstraint rbConstraint;
 
 /* Create a new dynamics world instance */
 /* TODO: add args to set the type of constraint solvers, etc. */
-rbDynamicsWorld *RB_dworld_new(const float gravity[3]);
+rbDynamicsWorld *RB_dworld_new(const float gravity[3], int whitelist);
 
 /* Delete the given dynamics world, and free any extra data it may require */
 void RB_dworld_delete(rbDynamicsWorld *world);
