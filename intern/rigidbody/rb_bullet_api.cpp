@@ -100,16 +100,11 @@ struct rbFilterCallback : public btOverlapFilterCallback {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
 
-    bool xfMatch0 = rb0->xf_col_group_mask;
-    // bool xfMatch1 = rb1->xf_col_group_mask;
+    bool noBulletMatch0 = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) == 0;
+    bool noBulletMatch1 = (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask) == 0;
+    bool noCustomMatch = (rb0->col_groups & rb1->col_groups) == 0;
 
-    for (int i = 0; i < 20; i++) {
-      // bool xfMatch0Bit = ((xfMatch0 & (1 << i)) != 0);
-      if (i == rb1->xf_col_group_idx) {
-        return false;
-      }
-    }
-    return true;
+    return noBulletMatch0 || noBulletMatch1 || noCustomMatch;
   }
 };
 
