@@ -92,7 +92,7 @@ void RB_dworld_export(rbDynamicsWorld *world, const char *filename);
 /* Setup ---------------------------- */
 
 /* Add RigidBody to dynamics world */
-void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups, int xf_col_group_idx);
+void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups, int xf_col_group_idx, int xf_col_group_mask);
 
 /* Remove RigidBody from dynamics world */
 void RB_dworld_remove_body(rbDynamicsWorld *world, rbRigidBody *object);

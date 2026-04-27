@@ -348,6 +348,22 @@ static void rna_RigidBodyOb_collision_collections_set(PointerRNA *ptr, const boo
   rbo->flag |= RBO_FLAG_NEEDS_VALIDATE;
 }
 
+static void rna_RigidBodyOb_xf_col_group_mask_set(PointerRNA *ptr, const bool *values)
+{
+  RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
+  int i;
+
+  for (i = 0; i < 20; i++) {
+    if (values[i]) {
+      rbo->xf_col_group_mask |= (1 << i);
+    }
+    else {
+      rbo->xf_col_group_mask &= ~(1 << i);
+    }
+  }
+  rbo->flag |= RBO_FLAG_NEEDS_VALIDATE;
+}
+
 static void rna_RigidBodyOb_kinematic_state_set(PointerRNA *ptr, bool value)
 {
   RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
@@ -1215,6 +1231,14 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
   RNA_def_property_ui_text(
       prop, "XF Collision Group Index", "Custom collision group index for XF rigid body system");
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+
+  prop = RNA_def_property(srna, "xf_col_group_mask", PROP_BOOLEAN, PROP_LAYER_MEMBER);
+  RNA_def_property_boolean_bitset_array_sdna(prop, nullptr, "xf_col_group_mask", 1 << 0, 20);
+  RNA_def_property_boolean_funcs(prop, nullptr, "rna_RigidBodyOb_xf_col_group_mask_set");
+  RNA_def_property_ui_text(
+      prop, "XF Collision Groups Mask", "Collision groups mask for XF rigid body system");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+  RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
 }
 
 static void rna_def_rigidbody_constraint(BlenderRNA *brna)

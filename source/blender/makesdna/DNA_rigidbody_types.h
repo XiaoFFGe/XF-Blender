@@ -118,6 +118,8 @@ typedef struct RigidBodyOb {
 
   /** Custom collision group index for XF rigid body system. */
   int xf_col_group_idx;
+  /** Collision groups mask for XF rigid body system. */
+  int xf_col_group_mask;
 
   /** (eRigidBody_MeshSource) mesh source for mesh based collision shapes. */
   short mesh_source;
@@ -151,7 +153,7 @@ typedef struct RigidBodyOb {
   float pos[3];
   char _pad1[4];
 
-  char _pad2[4]; /* 为将来使用保留的填充字节 */
+  char _pad2[16]; /* 为将来使用保留的填充字节 */
 
   /** This pointer is shared between all evaluated copies. */
   struct RigidBodyOb_Shared *shared;
