@@ -10,8 +10,12 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "BLI_listbase.h"
 #include "BLI_math_base.h"
 
+#include "MEM_guardedalloc.h"
+
+#include "RNA_access.hh"
 #include "RNA_define.hh"
 #include "RNA_enum_types.hh"
 
@@ -199,6 +203,30 @@ static void rna_RigidBodyWorld_constraints_collection_update(Main *bmain,
 }
 
 /* ******************************** */
+
+static void rna_RigidBodyOb_no_collision_objects_begin(CollectionPropertyIterator *iter, PointerRNA *ptr)
+{
+  RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
+  rna_iterator_listbase_begin(iter, ptr, &rbo->xf_no_collision_objects, nullptr);
+}
+
+static RigidBodyNoCollisionOb *rna_RigidBodyOb_no_collision_objects_add(ID * /*id*/, RigidBodyOb *rbo)
+{
+  RigidBodyNoCollisionOb *item = static_cast<RigidBodyNoCollisionOb *>(
+      MEM_callocN(sizeof(RigidBodyNoCollisionOb), __func__));
+  BLI_addtail(&rbo->xf_no_collision_objects, item);
+  return item;
+}
+
+static void rna_RigidBodyOb_no_collision_objects_remove(ID * /*id*/, RigidBodyOb *rbo, int * /*r_index*/, int index)
+{
+  RigidBodyNoCollisionOb *item = static_cast<RigidBodyNoCollisionOb *>(
+      BLI_findlink(&rbo->xf_no_collision_objects, index));
+  if (item != nullptr) {
+    BLI_remlink(&rbo->xf_no_collision_objects, item);
+    MEM_freeN(item);
+  }
+}
 
 static void rna_RigidBodyOb_reset(Main * /*bmain*/, Scene *scene, PointerRNA * /*ptr*/)
 {
@@ -1043,6 +1071,8 @@ static void rna_def_rigidbody_world(BlenderRNA *brna)
   RNA_def_function_output(func, parm);
 }
 
+static void rna_def_rigidbody_no_collision_objects(BlenderRNA *brna, PropertyRNA *cprop);
+
 static void rna_def_rigidbody_object(BlenderRNA *brna)
 {
   StructRNA *srna;
@@ -1243,8 +1273,18 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
   prop = RNA_def_property(srna, "xf_no_collision_objects", PROP_COLLECTION, PROP_NONE);
   RNA_def_property_struct_type(prop, "RigidBodyNoCollisionOb");
   RNA_def_property_collection_sdna(prop, nullptr, "xf_no_collision_objects", nullptr);
+  RNA_def_property_collection_funcs(prop,
+                                    "rna_RigidBodyOb_no_collision_objects_begin",
+                                    "rna_iterator_listbase_next",
+                                    "rna_iterator_listbase_end",
+                                    "rna_iterator_listbase_get",
+                                    nullptr,
+                                    nullptr,
+                                    nullptr,
+                                    nullptr);
   RNA_def_property_ui_text(prop, "XF No Collision Objects", "Objects that this rigid body should not collide with");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
+  rna_def_rigidbody_no_collision_objects(brna, prop);
 
   prop = RNA_def_property(srna, "xf_no_collision_objects_index", PROP_INT, PROP_NONE);
   RNA_def_property_int_sdna(prop, nullptr, "xf_no_collision_objects_index");
@@ -1665,6 +1705,30 @@ static void rna_def_rigidbody_no_collision_ob(BlenderRNA *brna)
   RNA_def_property_pointer_sdna(prop, nullptr, "ob");
   RNA_def_property_ui_text(prop, "Rigid Body", "Rigid body object to exclude from collisions");
   RNA_def_property_flag(prop, PROP_EDITABLE);
+}
+
+static void rna_def_rigidbody_no_collision_objects(BlenderRNA *brna, PropertyRNA *cprop)
+{
+  StructRNA *srna;
+  FunctionRNA *func;
+  PropertyRNA *parm;
+
+  RNA_def_property_srna(cprop, "RigidBodyNoCollisionObjects");
+  srna = RNA_def_struct(brna, "RigidBodyNoCollisionObjects", nullptr);
+  RNA_def_struct_sdna(srna, "RigidBodyOb");
+  RNA_def_struct_ui_text(srna, "Rigid Body No Collision Objects", "Collection of no collision objects");
+
+  func = RNA_def_function(srna, "add", "rna_RigidBodyOb_no_collision_objects_add");
+  RNA_def_function_ui_description(func, "Add a no collision object");
+  RNA_def_function_flag(func, FUNC_USE_SELF_ID);
+  parm = RNA_def_pointer(func, "object", "RigidBodyNoCollisionOb", "", "New no collision object");
+  RNA_def_function_return(func, parm);
+
+  func = RNA_def_function(srna, "remove", "rna_RigidBodyOb_no_collision_objects_remove");
+  RNA_def_function_ui_description(func, "Remove a no collision object");
+  RNA_def_function_flag(func, FUNC_USE_SELF_ID);
+  parm = RNA_def_int(func, "index", 0, INT_MIN, INT_MAX, "", "Index", 0, 0);
+  RNA_def_parameter_flags(parm, PROP_DYNAMIC, PARM_REQUIRED);
 }
 
 void RNA_def_rigidbody(BlenderRNA *brna)

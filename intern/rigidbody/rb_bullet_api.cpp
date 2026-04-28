@@ -69,8 +69,6 @@ struct rbDynamicsWorld {
 struct rbRigidBody {
   btRigidBody *body;
   int col_groups;
-  int xf_col_group_idx;
-  int xf_col_group_mask;
 };
 
 struct rbVert {
@@ -104,17 +102,15 @@ struct rbFilterCallback : public btOverlapFilterCallback {
   {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
-
-    bool noBulletMatch0 = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) == 0;
-    bool noBulletMatch1 = (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask) == 0;
-    bool noCustomMatch = (rb0->col_groups & rb1->col_groups) == 0;
-
+    
+    bool collides;
+    collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
+    collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+    collides = collides && (rb0->col_groups & rb1->col_groups);
     if (whitelist) {
-      return !(noBulletMatch0 || noBulletMatch1 || noCustomMatch);
-    }
-    else {
-      return noBulletMatch0 || noBulletMatch1 || noCustomMatch;
-    }
+      return collides;
+    }    
+    return !collides;
   }
 };
 
@@ -244,12 +240,10 @@ void RB_dworld_export(rbDynamicsWorld *world, const char *filename)
 
 /* Setup ---------------------------- */
 
-void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups, int xf_col_group_idx, int xf_col_group_mask)
+void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups)
 {
   btRigidBody *body = object->body;
   object->col_groups = col_groups;
-  object->xf_col_group_idx = xf_col_group_idx;
-  object->xf_col_group_mask = xf_col_group_mask;
 
   world->dynamicsWorld->addRigidBody(body);
 }
