@@ -82,6 +82,14 @@ typedef enum eRigidBodyWorld_Flag {
 } eRigidBodyWorld_Flag;
 
 /* ******************************** */
+/* RigidBody No Collision Object */
+
+typedef struct RigidBodyNoCollisionOb {
+  struct RigidBodyNoCollisionOb *next, *prev;
+  struct Object *ob;
+} RigidBodyNoCollisionOb;
+
+/* ******************************** */
 /* RigidBody Object */
 
 /* Container for data that is shared among evaluated copies.
@@ -124,6 +132,13 @@ typedef struct RigidBodyOb {
   /** (eRigidBody_MeshSource) mesh source for mesh based collision shapes. */
   short mesh_source;
   char _pad[2];
+
+  /** Index of active no collision object. */
+  int xf_no_collision_objects_index;
+  char _pad3[4];
+
+  /** List of objects that this rigid body should not collide with. */
+  struct ListBase xf_no_collision_objects;
 
   /* Physics Parameters */
   /** How much object 'weighs' (i.e. absolute 'amount of stuff' it holds). */

@@ -308,9 +308,42 @@ class ConnectRigidBodies(Operator):
             self.report({'WARNING'}, "No other objects selected")
             return {'CANCELLED'}
 
+# add no collision object to rigid body
+class AddNoCollisionCollectionToRigidBody(Operator):
+    """Add no collision object to rigid body"""
+    bl_idname = "rigidbody.add_no_collision_collection"
+    bl_label = "Add No Collision Object"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ob = context.object
+        rbo = ob.rigid_body
+        if rbo:
+            item = rbo.xf_no_collision_objects.add()
+            item.rigid_body = ob
+        return {'FINISHED'}
+
+# remove no collision object from rigid body
+class RemoveNoCollisionCollectionFromRigidBody(Operator):
+    """Remove no collision object from rigid body"""
+    bl_idname = "rigidbody.remove_no_collision_collection"
+    bl_label = "Remove No Collision Object"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ob = context.object
+        rbo = ob.rigid_body
+        if rbo:
+            index = rbo.xf_no_collision_objects_index
+            if index >= 0 and index < len(rbo.xf_no_collision_objects):
+                rbo.xf_no_collision_objects.remove(index)
+                rbo.xf_no_collision_objects_index = min(index, len(rbo.xf_no_collision_objects) - 1)
+        return {'FINISHED'}
 
 classes = (
     BakeToKeyframes,
     ConnectRigidBodies,
     CopyRigidbodySettings,
+    AddNoCollisionCollectionToRigidBody,
+    RemoveNoCollisionCollectionFromRigidBody,
 )

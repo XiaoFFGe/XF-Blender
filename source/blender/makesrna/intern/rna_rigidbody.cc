@@ -1239,6 +1239,19 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
       prop, "XF Collision Groups Mask", "Collision groups mask for XF rigid body system");
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
+
+  prop = RNA_def_property(srna, "xf_no_collision_objects", PROP_COLLECTION, PROP_NONE);
+  RNA_def_property_struct_type(prop, "RigidBodyNoCollisionOb");
+  RNA_def_property_collection_sdna(prop, nullptr, "xf_no_collision_objects", nullptr);
+  RNA_def_property_ui_text(prop, "XF No Collision Objects", "Objects that this rigid body should not collide with");
+  RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
+
+  prop = RNA_def_property(srna, "xf_no_collision_objects_index", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "xf_no_collision_objects_index");
+  RNA_def_property_range(prop, 0, INT_MAX);
+  RNA_def_property_int_default(prop, 0);
+  RNA_def_property_ui_text(prop, "XF No Collision Objects Index", "Index of active no collision object");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
 }
 
 static void rna_def_rigidbody_constraint(BlenderRNA *brna)
@@ -1638,10 +1651,27 @@ static void rna_def_rigidbody_constraint(BlenderRNA *brna)
   RNA_def_property_update(prop, NC_OBJECT, "rna_RigidBodyOb_reset");
 }
 
+static void rna_def_rigidbody_no_collision_ob(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "RigidBodyNoCollisionOb", nullptr);
+  RNA_def_struct_sdna(srna, "RigidBodyNoCollisionOb");
+  RNA_def_struct_ui_text(srna, "Rigid Body No Collision Object", "Object that this rigid body should not collide with");
+
+  prop = RNA_def_property(srna, "rigid_body", PROP_POINTER, PROP_NONE);
+  RNA_def_property_struct_type(prop, "Object");
+  RNA_def_property_pointer_sdna(prop, nullptr, "ob");
+  RNA_def_property_ui_text(prop, "Rigid Body", "Rigid body object to exclude from collisions");
+  RNA_def_property_flag(prop, PROP_EDITABLE);
+}
+
 void RNA_def_rigidbody(BlenderRNA *brna)
 {
   rna_def_rigidbody_world(brna);
   rna_def_rigidbody_object(brna);
+  rna_def_rigidbody_no_collision_ob(brna);
   rna_def_rigidbody_constraint(brna);
 }
 

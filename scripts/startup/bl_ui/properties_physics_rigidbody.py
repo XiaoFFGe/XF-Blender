@@ -2,9 +2,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+import bpy
 from bpy.types import (
-    Panel,
+    Panel
 )
+
+from bl_operators.rigidbody import AddNoCollisionCollectionToRigidBody, RemoveNoCollisionCollectionFromRigidBody
 
 
 def rigid_body_warning(layout, text):
@@ -257,7 +260,7 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         c = col.row(align=True)
         for i in range(5, 10):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
-        
+
         c = col.row(align=True)
         for i in range(10, 15):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
@@ -265,6 +268,15 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         c = col.row(align=True)
         for i in range(15, 20):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
+
+        row = layout.row(align=True)
+        row.template_list("PHYSICS_UL_no_collision_collection", "",
+        rbo, "xf_no_collision_objects",
+        rbo, "xf_no_collision_objects_index",)
+
+        col = row.column(align=True)
+        col.operator(AddNoCollisionCollectionToRigidBody.bl_idname, text="Add")
+        col.operator(RemoveNoCollisionCollectionFromRigidBody.bl_idname, text="Remove")
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"
@@ -347,6 +359,10 @@ class PHYSICS_PT_rigid_body_dynamics_deactivation(PHYSICS_PT_rigidbody_panel, Pa
         col.prop(rbo, "deactivate_angular_velocity", text="Angular")
         # TODO: other parameters such as time?
 
+class PHYSICS_UL_no_collision_collection(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.prop(item, "rigid_body", text="Rigid Body")
 
 classes = (
     PHYSICS_PT_rigid_body,
@@ -357,8 +373,8 @@ classes = (
     PHYSICS_PT_rigid_body_collisions_collections,
     PHYSICS_PT_rigid_body_dynamics,
     PHYSICS_PT_rigid_body_dynamics_deactivation,
+    PHYSICS_UL_no_collision_collection,
 )
-
 
 if __name__ == "__main__":  # only for live edit.
     from bpy.utils import register_class
