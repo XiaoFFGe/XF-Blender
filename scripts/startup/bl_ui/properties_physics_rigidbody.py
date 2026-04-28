@@ -269,6 +269,8 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         for i in range(15, 20):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
+        layout.label(text="No Collision Collections:")
+
         row = layout.row(align=True)
         row.template_list("PHYSICS_UL_no_collision_collection", "",
         rbo, "xf_no_collision_objects",
