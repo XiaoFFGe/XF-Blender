@@ -10,6 +10,7 @@
 
 #include "DNA_curve_types.h"
 #include "DNA_layer_types.h"
+#include "DNA_rigidbody_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_userdef_types.h"
 #include "DNA_view3d_types.h"
@@ -1834,10 +1835,13 @@ void rna_Scene_rigidbody_update(Main *bmain, Scene * /*scene*/, PointerRNA *ptr)
 {
   Scene *scene = (Scene *)ptr->owner_id;
 
-  if (scene->rigidbody_world) {
+  if (scene->rigidbody_world && BKE_rigidbody_world_physics(scene->rigidbody_world)) {
+    BKE_rigidbody_world_set_whitelist_mode(scene->rigidbody_world, scene->xf_col_group_whitelist);
+  }
+  else if (scene->rigidbody_world) {
     BKE_rigidbody_validate_sim_world(scene, scene->rigidbody_world, true);
   }
-  
+
   DEG_id_tag_update(&scene->id, ID_RECALC_SYNC_TO_EVAL);
 }
 

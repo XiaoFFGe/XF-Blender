@@ -770,8 +770,22 @@ static void rigidbody_validate_sim_object(RigidBodyWorld *rbw, Object *ob, bool 
   }
 
   if (rbw && rbw->shared->runtime->physics_world && rbo->shared->physics_object) {
+    rbRigidBody *rb = static_cast<rbRigidBody *>(rbo->shared->physics_object);
+
+    RB_body_clear_no_collision_bodies(rb);
+    for (RigidBodyNoCollisionOb *nc = static_cast<RigidBodyNoCollisionOb *>(rbo->xf_no_collision_objects.first);
+         nc;
+         nc = nc->next)
+    {
+      if (nc->ob && nc->ob->rigidbody_object && nc->ob->rigidbody_object->shared->physics_object) {
+        rbRigidBody *rb_other = static_cast<rbRigidBody *>(nc->ob->rigidbody_object->shared->physics_object);
+        RB_body_add_no_collision_body(rb, rb_other);
+        RB_body_add_no_collision_body(rb_other, rb);
+      }
+    }
+
     RB_dworld_add_body(rbw->shared->runtime->physics_world,
-                       static_cast<rbRigidBody *>(rbo->shared->physics_object),
+                       rb,
                        rbo->col_groups);
   }
 }
@@ -1119,6 +1133,13 @@ void BKE_rigidbody_validate_sim_world(Scene *scene, RigidBodyWorld *rbw, bool re
   RB_dworld_set_solver_iterations(rbw->shared->runtime->physics_world, rbw->num_solver_iterations);
   RB_dworld_set_split_impulse(rbw->shared->runtime->physics_world,
                               rbw->flag & RBW_FLAG_USE_SPLIT_IMPULSE);
+}
+
+void BKE_rigidbody_world_set_whitelist_mode(RigidBodyWorld *rbw, int whitelist)
+{
+  if (rbw && rbw->shared->runtime->physics_world) {
+    RB_dworld_set_whitelist_mode(rbw->shared->runtime->physics_world, whitelist);
+  }
 }
 
 /* ************************************** */

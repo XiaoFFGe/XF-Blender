@@ -55,6 +55,9 @@ rbDynamicsWorld *RB_dworld_new(const float gravity[3], int whitelist);
 /* Delete the given dynamics world, and free any extra data it may require */
 void RB_dworld_delete(rbDynamicsWorld *world);
 
+/* Set whitelist mode for collision filtering (0 = blacklist mode, 1 = whitelist mode) */
+void RB_dworld_set_whitelist_mode(rbDynamicsWorld *world, int whitelist);
+
 /* Settings ------------------------- */
 
 /* Gravity */
@@ -112,6 +115,12 @@ void RB_world_convex_sweep_test(rbDynamicsWorld *world,
 
 /* Create new RigidBody instance */
 rbRigidBody *RB_body_new(rbCollisionShape *shape, const float loc[3], const float rot[4]);
+
+/* Add a rigid body to the no-collision list */
+void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collision_body);
+
+/* Clear all no-collision bodies */
+void RB_body_clear_no_collision_bodies(rbRigidBody *object);
 
 /* Delete the given RigidBody instance */
 void RB_body_delete(rbRigidBody *object);

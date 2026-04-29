@@ -202,7 +202,7 @@ class BakeToKeyframes(Operator):
 class ConnectRigidBodies(Operator):
     """Create rigid body constraints between selected rigid bodies"""
     bl_idname = "rigidbody.connect"
-    bl_label = "Connect Rigid Bodies"
+    bl_label = "Connecot Rigid Bdies"
     bl_options = {'REGISTER', 'UNDO'}
 
     con_type: EnumProperty(
@@ -319,8 +319,7 @@ class AddNoCollisionCollectionToRigidBody(Operator):
         ob = context.object
         rbo = ob.rigid_body
         if rbo:
-            item = rbo.xf_no_collision_objects.add()
-            item.rigid_body = ob
+            rbo.xf_no_collision_objects.add()
         return {'FINISHED'}
 
 # remove no collision object from rigid body
@@ -340,10 +339,80 @@ class RemoveNoCollisionCollectionFromRigidBody(Operator):
                 rbo.xf_no_collision_objects_index = min(index, len(rbo.xf_no_collision_objects) - 1)
         return {'FINISHED'}
 
+# 从选择构建遮罩
+class BuildCollisionMaskFromRigidBody(Operator):
+    """Selected Build collision mask from rigid body"""
+    bl_idname = "rigidbody.build_collision_mask"
+    bl_label = "Selected Build Collision Mask"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # 非碰撞距离缩放系数属性
+    non_collision_distance_scale: bpy.props.FloatProperty(
+        name="Non-Collision Distance Scale",  # 属性显示名称
+        description="The distance scale for creating extra non-collision constraints while building physics",  # 属性描述
+        min=0,  # 最小值
+        soft_max=50,  # 软最大值
+        default=10,  # 默认值
+    )
+
+    # 是否在播放动画
+    @classmethod
+    def poll(cls, context):
+        # 如果正在播放动画，则禁止操作
+        if context.screen and context.screen.is_animation_playing:
+            return False
+        return True
+
+    def execute(self, context):
+
+        def __getRigidRange(obj: bpy.types.Object) -> float:
+            """计算刚体对象的最大尺寸范围"""
+            x0, y0, z0 = obj.bound_box[0]  # 获取边界框的最小点
+            x1, y1, z1 = obj.bound_box[6]  # 获取边界框的最大点
+            return max(x1 - x0, y1 - y0, z1 - z0)  # 返回三个轴向的最大尺寸
+
+        # 处理过的刚体对
+        Processed_Rigidbody = set()
+
+        selected_objects = context.selected_objects
+
+        for obj in selected_objects:
+            # 清空
+            obj.rigid_body.xf_no_collision_objects.clear()
+            for obj2 in selected_objects:
+                if obj != obj2: # 排除自身
+
+                    # 存储碰撞组遮罩
+                    mask = []
+                    for i, bit in enumerate(obj.rigid_body.xf_col_group_mask):
+                        if bit:
+                            mask.append(i)
+
+                    for i in mask:
+                        if i == obj2.rigid_body.xf_col_group_idx:
+
+                            pair = frozenset([obj, obj2])  # 有序对
+
+                            # 如果未处理过，则添加到遮罩
+                            if pair not in Processed_Rigidbody:
+                                # 计算两个刚体之间的距离
+                                distance = (obj.location - obj2.location).length
+                                # 如果距离小于阈值，创建非碰撞
+                                if distance < self.non_collision_distance_scale * ((__getRigidRange(obj) + __getRigidRange(obj2)) * 0.5):
+
+                                    item = obj.rigid_body.xf_no_collision_objects.add()
+                                    item.rigid_body = obj2
+                                    Processed_Rigidbody.add(pair)
+
+        return {'FINISHED'}
+
+
+
 classes = (
     BakeToKeyframes,
     ConnectRigidBodies,
     CopyRigidbodySettings,
     AddNoCollisionCollectionToRigidBody,
     RemoveNoCollisionCollectionFromRigidBody,
+    BuildCollisionMaskFromRigidBody,
 )

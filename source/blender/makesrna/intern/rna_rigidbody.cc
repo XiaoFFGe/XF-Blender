@@ -1283,6 +1283,7 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
                                     nullptr,
                                     nullptr);
   RNA_def_property_ui_text(prop, "XF No Collision Objects", "Objects that this rigid body should not collide with");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
   rna_def_rigidbody_no_collision_objects(brna, prop);
 

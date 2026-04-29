@@ -69,6 +69,9 @@ struct rbDynamicsWorld {
 struct rbRigidBody {
   btRigidBody *body;
   int col_groups;
+  struct rbRigidBody **no_collision_bodies;
+  int no_collision_count;
+  int no_collision_capacity;
 };
 
 struct rbVert {
@@ -102,14 +105,25 @@ struct rbFilterCallback : public btOverlapFilterCallback {
   {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
-    
+
+    for (int i = 0; i < rb0->no_collision_count; i++) {
+      if (rb0->no_collision_bodies[i] == rb1) {
+        return false;
+      }
+    }
+    for (int i = 0; i < rb1->no_collision_count; i++) {
+      if (rb1->no_collision_bodies[i] == rb0) {
+        return false;
+      }
+    }
+
     bool collides;
     collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
     collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
     collides = collides && (rb0->col_groups & rb1->col_groups);
     if (whitelist) {
       return collides;
-    }    
+    }
     return !collides;
   }
 };
@@ -171,6 +185,15 @@ void RB_dworld_delete(rbDynamicsWorld *world)
   delete world->collisionConfiguration;
   delete world->filterCallback;
   delete world;
+}
+
+void RB_dworld_set_whitelist_mode(rbDynamicsWorld *world, int whitelist)
+{
+  world->whitelist = whitelist;
+  if (world->filterCallback) {
+    rbFilterCallback *callback = static_cast<rbFilterCallback *>(world->filterCallback);
+    callback->whitelist = whitelist;
+  }
 }
 
 /* Settings ------------------------- */
@@ -341,6 +364,10 @@ rbRigidBody *RB_body_new(rbCollisionShape *shape, const float loc[3], const floa
 
   object->body->setUserPointer(object);
 
+  object->no_collision_bodies = nullptr;
+  object->no_collision_count = 0;
+  object->no_collision_capacity = 0;
+
   return object;
 }
 
@@ -366,7 +393,41 @@ void RB_body_delete(rbRigidBody *object)
   }
 
   delete body;
+
+  /* free no_collision_bodies array */
+  delete[] object->no_collision_bodies;
+
   delete object;
+}
+
+void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collision_body)
+{
+  for (int i = 0; i < object->no_collision_count; i++) {
+    if (object->no_collision_bodies[i] == no_collision_body) {
+      return;
+    }
+  }
+
+  if (object->no_collision_count >= object->no_collision_capacity) {
+    int new_capacity = object->no_collision_capacity == 0 ? 4 : object->no_collision_capacity * 2;
+    rbRigidBody **new_bodies = new rbRigidBody *[new_capacity];
+    for (int i = 0; i < object->no_collision_count; i++) {
+      new_bodies[i] = object->no_collision_bodies[i];
+    }
+    delete[] object->no_collision_bodies;
+    object->no_collision_bodies = new_bodies;
+    object->no_collision_capacity = new_capacity;
+  }
+
+  object->no_collision_bodies[object->no_collision_count++] = no_collision_body;
+}
+
+void RB_body_clear_no_collision_bodies(rbRigidBody *object)
+{
+  delete[] object->no_collision_bodies;
+  object->no_collision_bodies = nullptr;
+  object->no_collision_count = 0;
+  object->no_collision_capacity = 0;
 }
 
 /* Settings ------------------------- */

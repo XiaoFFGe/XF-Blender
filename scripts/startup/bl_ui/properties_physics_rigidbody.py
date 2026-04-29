@@ -7,9 +7,6 @@ from bpy.types import (
     Panel
 )
 
-from bl_operators.rigidbody import AddNoCollisionCollectionToRigidBody, RemoveNoCollisionCollectionFromRigidBody
-
-
 def rigid_body_warning(layout, text):
     row = layout.row(align=True)
     row.alignment = 'RIGHT'
@@ -223,7 +220,7 @@ class PHYSICS_PT_rigid_body_collisions_sensitivity(PHYSICS_PT_rigidbody_panel, P
 
 
 class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, Panel):
-    bl_label = "Collections"
+    bl_label = "Collision Collections"
     bl_parent_id = "PHYSICS_PT_rigid_body_collisions"
     bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {
@@ -246,8 +243,6 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         rbo = ob.rigid_body
 
         col = layout.column(align=True)
-
-        col.label(text="Collision Collections:")
 
         col.prop(context.scene, "xf_col_group_whitelist", text="Whitelist mode")
 
@@ -291,6 +286,8 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
 
         layout.prop(rbo, "xf_col_group_idx", text="Collision Group")
 
+        layout.label(text="Collision Mask:")
+
         col = layout.column(align=True)
 
         c = col.row(align=True)
@@ -309,16 +306,19 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
         for i in range(15, 20):
             c.prop(rbo, "xf_col_group_mask", index=i, text=str(i), toggle=True)
 
+        layout.operator("rigidbody.build_collision_mask")
+
         layout.label(text="Disable Collision:")
 
         row = layout.row(align=True)
+        row.enabled = not context.screen.is_animation_playing # 播放动画时不让用户修改
         row.template_list("PHYSICS_UL_no_collision_collection", "",
         rbo, "xf_no_collision_objects",
         rbo, "xf_no_collision_objects_index",)
 
         col = row.column(align=True)
-        col.operator(AddNoCollisionCollectionToRigidBody.bl_idname, text="", icon='ADD')
-        col.operator(RemoveNoCollisionCollectionFromRigidBody.bl_idname, text="", icon='REMOVE')
+        col.operator("rigidbody.add_no_collision_collection", text="", icon='ADD')
+        col.operator("rigidbody.remove_no_collision_collection", text="", icon='REMOVE')
 
 
 
