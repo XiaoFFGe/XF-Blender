@@ -204,17 +204,34 @@ static void rna_RigidBodyWorld_constraints_collection_update(Main *bmain,
 
 /* ******************************** */
 
+static bool rna_RigidBodyOb_no_collision_objects_skip(CollectionPropertyIterator * /*iter*/, void *data)
+{
+  if (data == nullptr) {
+    return true;
+  }
+  RigidBodyNoCollisionOb *nc = static_cast<RigidBodyNoCollisionOb *>(data);
+  return (nc->ob == nullptr);
+}
+
 static void rna_RigidBodyOb_no_collision_objects_begin(CollectionPropertyIterator *iter, PointerRNA *ptr)
 {
   RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
-  rna_iterator_listbase_begin(iter, ptr, &rbo->xf_no_collision_objects, nullptr);
+  if (rbo == nullptr) {
+    rna_iterator_listbase_begin(iter, ptr, nullptr, nullptr);
+    return;
+  }
+  rna_iterator_listbase_begin(iter, ptr, &rbo->xf_no_collision_objects, rna_RigidBodyOb_no_collision_objects_skip);
 }
 
-static RigidBodyNoCollisionOb *rna_RigidBodyOb_no_collision_objects_add(ID * /*id*/, RigidBodyOb *rbo)
+static RigidBodyNoCollisionOb *rna_RigidBodyOb_no_collision_objects_add(ID *id, RigidBodyOb *rbo)
 {
   RigidBodyNoCollisionOb *item = static_cast<RigidBodyNoCollisionOb *>(
       MEM_callocN(sizeof(RigidBodyNoCollisionOb), __func__));
   BLI_addtail(&rbo->xf_no_collision_objects, item);
+  
+  /* Mark the rigid body needs validation for physics world update. */
+  rbo->flag |= RBO_FLAG_NEEDS_VALIDATE;
+  
   return item;
 }
 
@@ -223,8 +240,12 @@ static void rna_RigidBodyOb_no_collision_objects_remove(ID * /*id*/, RigidBodyOb
   RigidBodyNoCollisionOb *item = static_cast<RigidBodyNoCollisionOb *>(
       BLI_findlink(&rbo->xf_no_collision_objects, index));
   if (item != nullptr) {
+    item->ob = nullptr;
     BLI_remlink(&rbo->xf_no_collision_objects, item);
     MEM_freeN(item);
+    
+    /* Mark the rigid body needs validation for physics world update. */
+    rbo->flag |= RBO_FLAG_NEEDS_VALIDATE;
   }
 }
 
@@ -234,6 +255,21 @@ static void rna_RigidBodyOb_reset(Main * /*bmain*/, Scene *scene, PointerRNA * /
     RigidBodyWorld *rbw = scene->rigidbody_world;
     BKE_rigidbody_cache_reset(rbw);
   }
+}
+
+static void rna_RigidBodyOb_no_collision_update(Main *bmain, Scene *scene, PointerRNA *ptr)
+{
+  Object *ob = (Object *)ptr->owner_id;
+  
+  /* Mark the rigid body needs validation for physics world update. */
+  if (ob && ob->rigidbody_object) {
+    ob->rigidbody_object->flag |= RBO_FLAG_NEEDS_VALIDATE;
+  }
+
+  rna_RigidBodyOb_reset(bmain, scene, ptr);
+  DEG_relations_tag_update(bmain);
+
+  WM_main_add_notifier(NC_OBJECT | ND_DRAW, ob);
 }
 
 static void rna_RigidBodyOb_shape_update(Main *bmain, Scene *scene, PointerRNA *ptr)
@@ -1283,7 +1319,7 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
                                     nullptr,
                                     nullptr);
   RNA_def_property_ui_text(prop, "XF No Collision Objects", "Objects that this rigid body should not collide with");
-  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_no_collision_update");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
   rna_def_rigidbody_no_collision_objects(brna, prop);
 
@@ -1706,6 +1742,7 @@ static void rna_def_rigidbody_no_collision_ob(BlenderRNA *brna)
   RNA_def_property_pointer_sdna(prop, nullptr, "ob");
   RNA_def_property_ui_text(prop, "Rigid Body", "Rigid body object to exclude from collisions");
   RNA_def_property_flag(prop, PROP_EDITABLE);
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_no_collision_update");
 }
 
 static void rna_def_rigidbody_no_collision_objects(BlenderRNA *brna, PropertyRNA *cprop)

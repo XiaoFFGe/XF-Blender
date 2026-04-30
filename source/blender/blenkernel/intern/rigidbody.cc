@@ -171,6 +171,12 @@ void BKE_rigidbody_free_object(Object *ob, RigidBodyWorld *rbw)
     return;
   }
 
+  /* free xf_no_collision_objects list */
+  LISTBASE_FOREACH_MUTABLE (RigidBodyNoCollisionOb *, nc, &rbo->xf_no_collision_objects) {
+    MEM_freeN(nc);
+  }
+  BLI_listbase_clear(&rbo->xf_no_collision_objects);
+
   /* free physics references */
   if (is_orig) {
     if (rbo->shared->physics_object) {
@@ -777,12 +783,18 @@ static void rigidbody_validate_sim_object(RigidBodyWorld *rbw, Object *ob, bool 
          nc;
          nc = nc->next)
     {
-      if (nc->ob && nc->ob->rigidbody_object && nc->ob->rigidbody_object->shared->physics_object) {
+      if (nc->ob == nullptr) {
+        continue;
+      }
+      if (nc->ob->rigidbody_object && nc->ob->rigidbody_object->shared->physics_object) {
         rbRigidBody *rb_other = static_cast<rbRigidBody *>(nc->ob->rigidbody_object->shared->physics_object);
         RB_body_add_no_collision_body(rb, rb_other);
-        RB_body_add_no_collision_body(rb_other, rb);
       }
     }
+    
+    /* 设置 XF 碰撞组信息 */
+    RB_body_set_xf_col_group_idx(rb, rbo->xf_col_group_idx);
+    RB_body_set_xf_col_group_mask(rb, rbo->xf_col_group_mask);
 
     RB_dworld_add_body(rbw->shared->runtime->physics_world,
                        rb,
@@ -1735,6 +1747,34 @@ static void rigidbody_update_sim_ob(Depsgraph *depsgraph, Object *ob, RigidBodyO
     RB_body_set_mass(static_cast<rbRigidBody *>(rbo->shared->physics_object), 0.0f);
   }
 
+  RigidBodyWorld *rbw = static_cast<RigidBodyWorld *>(scene->rigidbody_world);
+  if (rbw && rbw->shared->runtime && rbw->shared->runtime->physics_world) {
+    rbRigidBody *rb = static_cast<rbRigidBody *>(rbo->shared->physics_object);
+    if (rb != nullptr) {
+      /* 更新 xf 碰撞组 */
+      RB_body_set_xf_col_group_idx(rb, rbo->xf_col_group_idx);
+      RB_body_set_xf_col_group_mask(rb, rbo->xf_col_group_mask);
+      
+      /* 更新无碰撞体列表 */
+      RB_body_clear_no_collision_bodies(rb);
+      for (RigidBodyNoCollisionOb *nc = static_cast<RigidBodyNoCollisionOb *>(rbo->xf_no_collision_objects.first);
+           nc;
+           nc = nc->next)
+      {
+        if (nc->ob == nullptr) {
+          continue;
+        }
+        if (nc->ob->rigidbody_object && nc->ob->rigidbody_object->shared && nc->ob->rigidbody_object->shared->physics_object) {
+          rbRigidBody *rb_other = static_cast<rbRigidBody *>(nc->ob->rigidbody_object->shared->physics_object);
+          if (rb_other != nullptr) {
+            RB_body_add_no_collision_body(rb, rb_other);
+            RB_body_add_no_collision_body(rb_other, rb);
+          }
+        }
+      }
+    }
+  }
+
   /* NOTE: no other settings need to be explicitly updated here,
    * since RNA setters take care of the rest :)
    */
@@ -2450,6 +2490,15 @@ static RigidBodyOb *rigidbody_copy_object(const Object *ob, const int flag)
 
     /* just duplicate the whole struct first (to catch all the settings) */
     rboN = static_cast<RigidBodyOb *>(MEM_dupallocN(ob->rigidbody_object));
+    /* Initialize the list base for the new object */
+    BLI_listbase_clear(&rboN->xf_no_collision_objects);
+
+    /* Copy the no collision objects list */
+    LISTBASE_FOREACH (RigidBodyNoCollisionOb *, nc_orig, &ob->rigidbody_object->xf_no_collision_objects) {
+      RigidBodyNoCollisionOb *nc_new = static_cast<RigidBodyNoCollisionOb *>(MEM_callocN(sizeof(RigidBodyNoCollisionOb), "RigidBodyNoCollisionOb"));
+      nc_new->ob = nc_orig->ob;
+      BLI_addtail(&rboN->xf_no_collision_objects, nc_new);
+    }
 
     if (is_orig) {
       /* This is a regular copy, and not an evaluated copy for depsgraph evaluation */

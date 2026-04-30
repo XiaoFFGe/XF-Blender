@@ -97,6 +97,12 @@ void RB_dworld_export(rbDynamicsWorld *world, const char *filename);
 /* Add RigidBody to dynamics world */
 void RB_dworld_add_body(rbDynamicsWorld *world, rbRigidBody *object, int col_groups);
 
+/* Set xf collision group index for XF rigid body system */
+void RB_body_set_xf_col_group_idx(rbRigidBody *object, int idx);
+
+/* Set xf collision groups mask for XF rigid body system */
+void RB_body_set_xf_col_group_mask(rbRigidBody *object, int mask);
+
 /* Remove RigidBody from dynamics world */
 void RB_dworld_remove_body(rbDynamicsWorld *world, rbRigidBody *object);
 

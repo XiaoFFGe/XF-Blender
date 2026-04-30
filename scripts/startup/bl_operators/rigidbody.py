@@ -319,7 +319,13 @@ class AddNoCollisionCollectionToRigidBody(Operator):
         ob = context.object
         rbo = ob.rigid_body
         if rbo:
-            rbo.xf_no_collision_objects.add()
+            # Get selected objects (excluding active object)
+            selected_objs = [obj for obj in context.selected_objects if obj != ob and obj.rigid_body]
+            if selected_objs:
+                # Add first selected object to no collision list
+                nc = rbo.xf_no_collision_objects.add()
+                nc.rigid_body = selected_objs[0]
+           
         return {'FINISHED'}
 
 # remove no collision object from rigid body
@@ -377,8 +383,10 @@ class BuildCollisionMaskFromRigidBody(Operator):
         selected_objects = context.selected_objects
 
         for obj in selected_objects:
-            # 清空
-            obj.rigid_body.xf_no_collision_objects.clear()
+            # 清空 - 使用循环删除所有元素
+            nc_objects = obj.rigid_body.xf_no_collision_objects
+            for i in range(len(nc_objects) - 1, -1, -1):
+                nc_objects.remove(i)
             for obj2 in selected_objects:
                 if obj != obj2: # 排除自身
 

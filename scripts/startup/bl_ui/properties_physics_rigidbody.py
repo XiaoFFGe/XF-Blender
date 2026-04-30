@@ -320,9 +320,6 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
         col.operator("rigidbody.add_no_collision_collection", text="", icon='ADD')
         col.operator("rigidbody.remove_no_collision_collection", text="", icon='REMOVE')
 
-
-
-
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"
     bl_parent_id = "PHYSICS_PT_rigid_body"
