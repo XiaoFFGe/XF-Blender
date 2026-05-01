@@ -124,6 +124,7 @@ struct rbFilterCallback : public btOverlapFilterCallback {
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
 
+    /* 1. 最高优先级：xf_no_collision_objects - 禁用掉多个碰撞 */
     if (checkNoCollisionBodies(rb0, rb1)) {
       return false;
     }
@@ -132,21 +133,13 @@ struct rbFilterCallback : public btOverlapFilterCallback {
       return false;
     }
 
-    /* 检查 xf_col_group_idx 和 xf_col_group_mask - 遵循与 collision_collections 相同的模式 */
-    bool xf_collides = false;
-    if (rb0->xf_col_group_idx >= 0 && rb0->xf_col_group_idx <= 31) {
-      xf_collides = ((1U << rb0->xf_col_group_idx) & rb1->xf_col_group_mask) != 0;
-    }
-    if (xf_collides && rb1->xf_col_group_idx >= 0 && rb1->xf_col_group_idx <= 31) {
-      xf_collides = ((1U << rb1->xf_col_group_idx) & rb0->xf_col_group_mask) != 0;
-    }
-    
+    /* 2. collision_collections 系统 */
     bool collides;
     collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
     collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
     collides = collides && (rb0->col_groups & rb1->col_groups);
-    collides = collides && xf_collides;
     
+    /* 使用 xf_col_group_whitelist 控制 collision_collections 的白名单/黑名单模式 */
     if (whitelist) {
       return collides;
     }

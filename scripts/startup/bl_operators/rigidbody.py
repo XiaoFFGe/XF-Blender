@@ -352,15 +352,6 @@ class BuildCollisionMaskFromRigidBody(Operator):
     bl_label = "Selected Build Collision Mask"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # 非碰撞距离缩放系数属性
-    non_collision_distance_scale: bpy.props.FloatProperty(
-        name="Non-Collision Distance Scale",  # 属性显示名称
-        description="The distance scale for creating extra non-collision constraints while building physics",  # 属性描述
-        min=0,  # 最小值
-        soft_max=50,  # 软最大值
-        default=10,  # 默认值
-    )
-
     # 是否在播放动画
     @classmethod
     def poll(cls, context):
@@ -371,22 +362,16 @@ class BuildCollisionMaskFromRigidBody(Operator):
 
     def execute(self, context):
 
-        def __getRigidRange(obj: bpy.types.Object) -> float:
-            """计算刚体对象的最大尺寸范围"""
-            x0, y0, z0 = obj.bound_box[0]  # 获取边界框的最小点
-            x1, y1, z1 = obj.bound_box[6]  # 获取边界框的最大点
-            return max(x1 - x0, y1 - y0, z1 - z0)  # 返回三个轴向的最大尺寸
+        # 选中的刚体对象
+        selected_objects = [obj for obj in context.selected_objects if obj.rigid_body]
 
-        # 处理过的刚体对
-        Processed_Rigidbody = set()
-
-        selected_objects = context.selected_objects
-
-        for obj in selected_objects:
-            # 清空 - 使用循环删除所有元素
+        # 清空 - 使用循环删除所有元素
+        for obj in selected_objects:   
             nc_objects = obj.rigid_body.xf_no_collision_objects
             for i in range(len(nc_objects) - 1, -1, -1):
                 nc_objects.remove(i)
+
+        for obj in selected_objects:
             for obj2 in selected_objects:
                 if obj != obj2: # 排除自身
 
@@ -399,18 +384,8 @@ class BuildCollisionMaskFromRigidBody(Operator):
                     for i in mask:
                         if i == obj2.rigid_body.xf_col_group_idx:
 
-                            pair = frozenset([obj, obj2])  # 有序对
-
-                            # 如果未处理过，则添加到遮罩
-                            if pair not in Processed_Rigidbody:
-                                # 计算两个刚体之间的距离
-                                distance = (obj.location - obj2.location).length
-                                # 如果距离小于阈值，创建非碰撞
-                                if distance < self.non_collision_distance_scale * ((__getRigidRange(obj) + __getRigidRange(obj2)) * 0.5):
-
-                                    item = obj.rigid_body.xf_no_collision_objects.add()
-                                    item.rigid_body = obj2
-                                    Processed_Rigidbody.add(pair)
+                            item = obj.rigid_body.xf_no_collision_objects.add()
+                            item.rigid_body = obj2
 
         return {'FINISHED'}
 
