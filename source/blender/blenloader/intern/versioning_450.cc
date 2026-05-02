@@ -6530,7 +6530,7 @@ void blo_do_versions_450(FileData * /*fd*/, Library * /*lib*/, Main *bmain)
     }
   }
 
-  if (!MAIN_VERSION_FILE_ATLEAST(bmain, 405, 10)) {
+  if (!MAIN_VERSION_FILE_ATLEAST(bmain, 405, 92)) {
     /* Move xf_col_group_whitelist from Scene to RigidBodyWorld. */
     LISTBASE_FOREACH (Scene *, scene, &bmain->scenes) {
       if (scene->rigidbody_world) {
