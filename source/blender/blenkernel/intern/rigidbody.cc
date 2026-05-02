@@ -1185,7 +1185,7 @@ RigidBodyWorld *BKE_rigidbody_create_world(Scene *scene)
    * The blender default scene has a frame rate of 24, so take 10 sub-steps (24fps * 10). */
   rbw->substeps_per_frame = 10;
   rbw->num_solver_iterations = 10; /* 10 is bullet default */
-  rbw->xf_col_group_whitelist = 1;
+  rbw->xf_col_group_whitelist = 0;
 
   rbw->shared->pointcache = BKE_ptcache_add(&(rbw->shared->ptcaches));
   rbw->shared->pointcache->step = 1;

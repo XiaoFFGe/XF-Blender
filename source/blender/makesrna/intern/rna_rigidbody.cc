@@ -1061,7 +1061,7 @@ static void rna_def_rigidbody_world(BlenderRNA *brna)
 
   /* xf_col_group_whitelist */
   prop = RNA_def_property(srna, "xf_col_group_whitelist", PROP_BOOLEAN, PROP_NONE);
-  RNA_def_property_boolean_sdna(prop, nullptr, "xf_col_group_whitelist", 1);
+  RNA_def_property_boolean_sdna(prop, nullptr, "xf_col_group_whitelist", 0);
   RNA_def_property_ui_text(prop, "Whitelist Mode", "Enable xf_col_group_whitelist");
   RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_xf_col_group_whitelist_update");
 
