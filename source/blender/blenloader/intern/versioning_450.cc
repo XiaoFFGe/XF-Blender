@@ -17,6 +17,7 @@
 #include "DNA_mesh_types.h"
 #include "DNA_modifier_types.h"
 #include "DNA_object_force_types.h"
+#include "DNA_rigidbody_types.h"
 #include "DNA_sequence_types.h"
 
 #include "BLI_listbase.h"
@@ -6525,6 +6526,16 @@ void blo_do_versions_450(FileData * /*fd*/, Library * /*lib*/, Main *bmain)
         if (uvsculpt.strength_curve == nullptr) {
           uvsculpt.strength_curve = BKE_curvemapping_add(1, 0.0f, 0.0f, 1.0f, 1.0f);
         }
+      }
+    }
+  }
+
+  if (!MAIN_VERSION_FILE_ATLEAST(bmain, 405, 92)) {
+    /* Move xf_col_group_whitelist from Scene to RigidBodyWorld. */
+    LISTBASE_FOREACH (Scene *, scene, &bmain->scenes) {
+      if (scene->rigidbody_world) {
+        /* The Scene struct still has the old char member at this point in the conversion. */
+        scene->rigidbody_world->xf_col_group_whitelist = scene->xf_col_group_whitelist;
       }
     }
   }

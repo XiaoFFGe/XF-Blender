@@ -244,7 +244,7 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
 
         col = layout.column(align=True)
 
-        col.prop(context.scene, "xf_col_group_whitelist", text="Whitelist mode")
+        col.prop(context.scene.rigidbody_world, "xf_col_group_whitelist", text="Whitelist mode")
 
         c = col.row(align=True)
         for i in range(5):

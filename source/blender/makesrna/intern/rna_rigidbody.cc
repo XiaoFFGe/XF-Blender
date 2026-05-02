@@ -202,6 +202,20 @@ static void rna_RigidBodyWorld_constraints_collection_update(Main *bmain,
   rna_RigidBodyWorld_reset(bmain, scene, ptr);
 }
 
+static void rna_RigidBodyWorld_xf_col_group_whitelist_update(Main * /*bmain*/,
+                                                             Scene * /*scene*/,
+                                                             PointerRNA *ptr)
+{
+  RigidBodyWorld *rbw = (RigidBodyWorld *)ptr->data;
+
+#  ifdef WITH_BULLET
+  rbDynamicsWorld *physics_world = BKE_rigidbody_world_physics(rbw);
+  if (physics_world) {
+    RB_dworld_set_whitelist_mode(physics_world, rbw->xf_col_group_whitelist);
+  }
+#  endif
+}
+
 /* ******************************** */
 
 static bool rna_RigidBodyOb_no_collision_objects_skip(CollectionPropertyIterator * /*iter*/, void *data)
@@ -1044,6 +1058,12 @@ static void rna_def_rigidbody_world(BlenderRNA *brna)
   RNA_def_property_clear_flag(prop, PROP_EDITABLE);
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_ui_text(prop, "Effector Weights", "");
+
+  /* xf_col_group_whitelist */
+  prop = RNA_def_property(srna, "xf_col_group_whitelist", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "xf_col_group_whitelist", 1);
+  RNA_def_property_ui_text(prop, "Whitelist Mode", "Enable xf_col_group_whitelist");
+  RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_xf_col_group_whitelist_update");
 
   /* Sweep test */
   func = RNA_def_function(srna, "convex_sweep_test", "rna_RigidBodyWorld_convex_sweep_test");

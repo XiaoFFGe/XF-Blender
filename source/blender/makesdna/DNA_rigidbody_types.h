@@ -47,7 +47,9 @@ typedef struct RigidBodyWorld {
   /** Group containing objects to use for Rigid Body Constraints. */
   struct Collection *constraints;
 
-  char _pad[4];
+  /** xf_col_group_whitelist for XF rigid body system. */
+  int xf_col_group_whitelist;
+
   /** Last frame world was evaluated for (internal). */
   float ltime;
 

@@ -1139,7 +1139,7 @@ void BKE_rigidbody_validate_sim_world(Scene *scene, RigidBodyWorld *rbw, bool re
     if (rbw->shared->runtime->physics_world) {
       RB_dworld_delete(rbw->shared->runtime->physics_world);
     }
-    rbw->shared->runtime->physics_world = RB_dworld_new(scene->physics_settings.gravity, scene->xf_col_group_whitelist);
+    rbw->shared->runtime->physics_world = RB_dworld_new(scene->physics_settings.gravity, rbw->xf_col_group_whitelist);
   }
 
   RB_dworld_set_solver_iterations(rbw->shared->runtime->physics_world, rbw->num_solver_iterations);
@@ -1185,6 +1185,7 @@ RigidBodyWorld *BKE_rigidbody_create_world(Scene *scene)
    * The blender default scene has a frame rate of 24, so take 10 sub-steps (24fps * 10). */
   rbw->substeps_per_frame = 10;
   rbw->num_solver_iterations = 10; /* 10 is bullet default */
+  rbw->xf_col_group_whitelist = 1;
 
   rbw->shared->pointcache = BKE_ptcache_add(&(rbw->shared->ptcaches));
   rbw->shared->pointcache->step = 1;

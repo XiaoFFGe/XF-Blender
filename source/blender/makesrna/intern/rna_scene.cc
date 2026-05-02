@@ -1836,7 +1836,7 @@ void rna_Scene_rigidbody_update(Main *bmain, Scene * /*scene*/, PointerRNA *ptr)
   Scene *scene = (Scene *)ptr->owner_id;
 
   if (scene->rigidbody_world && BKE_rigidbody_world_physics(scene->rigidbody_world)) {
-    BKE_rigidbody_world_set_whitelist_mode(scene->rigidbody_world, scene->xf_col_group_whitelist);
+    BKE_rigidbody_world_set_whitelist_mode(scene->rigidbody_world, scene->rigidbody_world->xf_col_group_whitelist);
   }
   else if (scene->rigidbody_world) {
     BKE_rigidbody_validate_sim_world(scene, scene->rigidbody_world, true);
@@ -9317,12 +9317,6 @@ void RNA_def_scene(BlenderRNA *brna)
   prop = RNA_def_property(srna, "hydra", PROP_POINTER, PROP_NONE);
   RNA_def_property_struct_type(prop, "SceneHydra");
   RNA_def_property_ui_text(prop, "Hydra", "Hydra settings for the scene");
-
-  /* xf_col_group_whitelist */
-  prop = RNA_def_property(srna, "xf_col_group_whitelist", PROP_BOOLEAN, PROP_NONE);
-  RNA_def_property_boolean_sdna(prop, nullptr, "xf_col_group_whitelist", 1);
-  RNA_def_property_ui_text(prop, "xf_col_group_whitelist", "Enable xf_col_group_whitelist");
-  RNA_def_property_update(prop, NC_SCENE, "rna_Scene_rigidbody_update");
 
   /* Nestled Data. */
   /* *** Non-Animated *** */
