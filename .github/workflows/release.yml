@@ -73,7 +73,7 @@ jobs:
       - name: Package Release Asset
         working-directory: blender
         run: |
-          VERSION="5.1.1"
+          VERSION="4.5.9"
           HASH="${{ steps.vars.outputs.sha_short }}"
           DATE="${{ steps.vars.outputs.build_date }}"
           ASSET_NAME="blender-$VERSION-npr-port-linux64-$HASH-$DATE"
@@ -124,7 +124,7 @@ jobs:
 
       - name: Package Release Asset
         run: |
-          VERSION="5.1.1"
+          VERSION="4.5.9"
           HASH="${{ steps.vars.outputs.sha_short }}"
           DATE="${{ steps.vars.outputs.build_date }}"
           ASSET_NAME="blender-$VERSION-npr-port-macos-$HASH-$DATE"
