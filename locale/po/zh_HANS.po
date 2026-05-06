@@ -141,8 +141,8 @@ msgid "Collision Group"
 msgstr "碰撞组"
 
 
-msgid "Collision Mask:"
-msgstr "碰撞组遮罩："
+msgid "Collision Mask"
+msgstr "碰撞遮罩"
 
 
 msgctxt "Operator"
@@ -170,8 +170,8 @@ msgid "Disable Collision Collections"
 msgstr "禁用碰撞集合"
 
 
-msgid "Disable Collision:"
-msgstr "禁用碰撞："
+msgid "Disable Collision"
+msgstr "禁用碰撞"
 
 
 msgid "Color Set"
