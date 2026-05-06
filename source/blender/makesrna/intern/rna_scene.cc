@@ -1836,7 +1836,8 @@ void rna_Scene_rigidbody_update(Main *bmain, Scene * /*scene*/, PointerRNA *ptr)
   Scene *scene = (Scene *)ptr->owner_id;
 
   if (scene->rigidbody_world && BKE_rigidbody_world_physics(scene->rigidbody_world)) {
-    BKE_rigidbody_world_set_whitelist_mode(scene->rigidbody_world, scene->rigidbody_world->xf_col_group_whitelist);
+    BKE_rigidbody_world_set_whitelist_mode(scene->rigidbody_world,
+                                           scene->rigidbody_world->xf_col_group_whitelist);
   }
   else if (scene->rigidbody_world) {
     BKE_rigidbody_validate_sim_world(scene, scene->rigidbody_world, true);

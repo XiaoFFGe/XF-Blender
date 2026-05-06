@@ -444,7 +444,9 @@ static void object_foreach_id(ID *id, LibraryForeachIDData *data)
   }
 
   if (object->rigidbody_object) {
-    LISTBASE_FOREACH (RigidBodyNoCollisionOb *, nc, &object->rigidbody_object->xf_no_collision_objects) {
+    LISTBASE_FOREACH (
+        RigidBodyNoCollisionOb *, nc, &object->rigidbody_object->xf_no_collision_objects)
+    {
       BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, nc->ob, IDWALK_CB_USER);
     }
   }
@@ -659,7 +661,8 @@ static void object_blend_write(BlendWriter *writer, ID *id, const void *id_addre
   if (ob->rigidbody_object) {
     /* TODO: if any extra data is added to handle duplis, will need separate function then */
     BLO_write_struct(writer, RigidBodyOb, ob->rigidbody_object);
-    BLO_write_struct_list(writer, RigidBodyNoCollisionOb, &ob->rigidbody_object->xf_no_collision_objects);
+    BLO_write_struct_list(
+        writer, RigidBodyNoCollisionOb, &ob->rigidbody_object->xf_no_collision_objects);
   }
   if (ob->rigidbody_constraint) {
     BLO_write_struct(writer, RigidBodyCon, ob->rigidbody_constraint);

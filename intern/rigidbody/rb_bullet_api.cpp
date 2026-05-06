@@ -55,8 +55,6 @@
 #include <iostream>
 using namespace std;
 
-
-
 struct rbDynamicsWorld {
   btDiscreteDynamicsWorld *dynamicsWorld;
   btDefaultCollisionConfiguration *collisionConfiguration;
@@ -138,7 +136,7 @@ struct rbFilterCallback : public btOverlapFilterCallback {
     collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
     collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
     collides = collides && (rb0->col_groups & rb1->col_groups);
-    
+
     /* 使用 xf_col_group_whitelist 控制 collision_collections 的白名单/黑名单模式 */
     if (whitelist) {
       return collides;
@@ -218,7 +216,9 @@ void RB_dworld_set_whitelist_mode(rbDynamicsWorld *world, int whitelist)
   }
 }
 
-void RB_dworld_set_no_collision_callback(rbDynamicsWorld *world, bool (*callback)(const rbRigidBody *, const rbRigidBody *))
+void RB_dworld_set_no_collision_callback(rbDynamicsWorld *world,
+                                         bool (*callback)(const rbRigidBody *,
+                                                          const rbRigidBody *))
 {
   if (world->filterCallback) {
     rbFilterCallback *filterCallback = static_cast<rbFilterCallback *>(world->filterCallback);
@@ -397,7 +397,7 @@ rbRigidBody *RB_body_new(rbCollisionShape *shape, const float loc[3], const floa
   object->no_collision_bodies = nullptr;
   object->no_collision_count = 0;
   object->no_collision_capacity = 0;
-  
+
   object->xf_col_group_idx = 0;
   object->xf_col_group_mask = 0;
 
