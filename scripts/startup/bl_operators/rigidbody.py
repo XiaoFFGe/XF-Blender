@@ -309,6 +309,8 @@ class ConnectRigidBodies(Operator):
             return {'CANCELLED'}
 
 # add no collision object to rigid body
+
+
 class AddNoCollisionCollectionToRigidBody(Operator):
     """Add no collision object to rigid body"""
     bl_idname = "rigidbody.add_no_collision_collection"
@@ -325,10 +327,12 @@ class AddNoCollisionCollectionToRigidBody(Operator):
                 # Add first selected object to no collision list
                 nc = rbo.xf_no_collision_objects.add()
                 nc.rigid_body = selected_objs[0]
-           
+
         return {'FINISHED'}
 
 # remove no collision object from rigid body
+
+
 class RemoveNoCollisionCollectionFromRigidBody(Operator):
     """Remove no collision object from rigid body"""
     bl_idname = "rigidbody.remove_no_collision_collection"
@@ -346,6 +350,8 @@ class RemoveNoCollisionCollectionFromRigidBody(Operator):
         return {'FINISHED'}
 
 # 从选择构建遮罩
+
+
 class BuildCollisionMaskFromRigidBody(Operator):
     """Selected Build collision mask from rigid body"""
     bl_idname = "rigidbody.build_collision_mask"
@@ -366,14 +372,14 @@ class BuildCollisionMaskFromRigidBody(Operator):
         selected_objects = [obj for obj in context.selected_objects if obj.rigid_body]
 
         # 清空 - 使用循环删除所有元素
-        for obj in selected_objects:   
+        for obj in selected_objects:
             nc_objects = obj.rigid_body.xf_no_collision_objects
             for i in range(len(nc_objects) - 1, -1, -1):
                 nc_objects.remove(i)
 
         for obj in selected_objects:
             for obj2 in selected_objects:
-                if obj != obj2: # 排除自身
+                if obj != obj2:  # 排除自身
 
                     # 存储碰撞组遮罩
                     mask = []
@@ -388,7 +394,6 @@ class BuildCollisionMaskFromRigidBody(Operator):
                             item.rigid_body = obj2
 
         return {'FINISHED'}
-
 
 
 classes = (

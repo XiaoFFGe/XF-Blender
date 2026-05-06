@@ -335,8 +335,8 @@ const EnumPropertyItem rna_enum_object_axis_items[] = {
 #  include "ED_object.hh"
 #  include "ED_particle.hh"
 
-#  include "DEG_depsgraph_query.hh"
 #  include "BKE_rigidbody.h"
+#  include "DEG_depsgraph_query.hh"
 
 static void rna_Object_internal_update(Main *bmain, Scene *scene, PointerRNA *ptr)
 {

@@ -7,6 +7,7 @@ from bpy.types import (
     Panel
 )
 
+
 def rigid_body_warning(layout, text):
     row = layout.row(align=True)
     row.alignment = 'RIGHT'
@@ -262,6 +263,7 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
         for i in range(15, 20):
             c.prop(rbo, "collision_collections", index=i, text=str(i), toggle=True)
 
+
 class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Disable Collision Collections"
     bl_parent_id = "PHYSICS_PT_rigid_body_collisions"
@@ -271,6 +273,7 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
         'BLENDER_EEVEE_NEXT',
         'BLENDER_WORKBENCH',
     }
+
     @classmethod
     def poll(cls, context):
         obj = context.object
@@ -311,14 +314,15 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
         layout.label(text="Disable Collision:")
 
         row = layout.row(align=True)
-        row.enabled = not context.screen.is_animation_playing # 播放动画时不让用户修改
+        row.enabled = not context.screen.is_animation_playing  # 播放动画时不让用户修改
         row.template_list("PHYSICS_UL_no_collision_collection", "",
-        rbo, "xf_no_collision_objects",
-        rbo, "xf_no_collision_objects_index",)
+                          rbo, "xf_no_collision_objects",
+                          rbo, "xf_no_collision_objects_index",)
 
         col = row.column(align=True)
         col.operator("rigidbody.add_no_collision_collection", text="", icon='ADD')
         col.operator("rigidbody.remove_no_collision_collection", text="", icon='REMOVE')
+
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"
@@ -401,10 +405,12 @@ class PHYSICS_PT_rigid_body_dynamics_deactivation(PHYSICS_PT_rigidbody_panel, Pa
         col.prop(rbo, "deactivate_angular_velocity", text="Angular")
         # TODO: other parameters such as time?
 
+
 class PHYSICS_UL_no_collision_collection(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         layout.prop(item, "rigid_body", text="Rigid Body")
+
 
 classes = (
     PHYSICS_PT_rigid_body,

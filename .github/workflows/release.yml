@@ -1,0 +1,181 @@
+name: XF Blender Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Existing release tag name to upload assets to'
+        required: true
+
+jobs:
+  build-linux:
+    name: Build Linux x64
+    runs-on: ubuntu-24.04
+    container:
+      image: rockylinux/rockylinux:9
+    permissions:
+      contents: read
+      actions: write
+    env:
+      BUILD_CMAKE_ARGS: -DSYCL_CPP_FLAGS=--gcc-toolchain=/opt/rh/gcc-toolset-14/root/usr
+    steps:
+      - name: Install Dependencies
+        run: |
+          dnf -y update
+          dnf -y install dnf-plugins-core
+          dnf config-manager --set-enabled crb
+          dnf -y install \
+            gcc-toolset-14 \
+            make cmake ninja-build git git-lfs python3 rsync patch subversion tar xz wget \
+            libSM libSM-devel libICE libICE-devel \
+            libX11-devel libXxf86vm libXcursor-devel libXi-devel libXrandr-devel libXinerama-devel \
+            libglvnd-devel mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel \
+            libXext-devel libXrender-devel libXfixes-devel \
+            wayland-devel wayland-protocols-devel libxkbcommon-devel dbus-devel
+
+      - name: Enable GCC Toolset
+        run: |
+          echo "PATH=/opt/rh/gcc-toolset-14/root/usr/bin:/opt/rh/gcc-toolset-14/root/usr/sbin:$PATH" >> "$GITHUB_ENV"
+          echo "CC=gcc" >> "$GITHUB_ENV"
+          echo "CXX=g++" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          path: blender
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.tag_name }}
+
+      - name: Get Short Hash & Date
+        working-directory: blender
+        id: vars
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "build_date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Setup Git LFS
+        working-directory: blender
+        run: |
+          git config lfs.url "https://projects.blender.org/blender/blender.git/info/lfs"
+          git config lfs.remote.searchall false
+          git lfs install
+
+      - name: Blender Make Update
+        working-directory: blender
+        run: make update
+
+      - name: Build Blender Release
+        working-directory: blender
+        run: make release ninja
+
+      - name: Package Release Asset
+        working-directory: blender
+        run: |
+          VERSION="4.5.9"
+          HASH="${{ steps.vars.outputs.sha_short }}"
+          DATE="${{ steps.vars.outputs.build_date }}"
+          ASSET_NAME="blender-$VERSION-npr-port-linux64-$HASH-$DATE"
+          TAR_FILE="$ASSET_NAME.tar.xz"
+          BUILD_DIR="../build_linux_release/bin"
+          
+          mkdir -p "$ASSET_NAME"
+          cp -r "$BUILD_DIR"/* "$ASSET_NAME/"
+          
+          tar -cvJf "$TAR_FILE" "$ASSET_NAME"
+          echo "TAR_PATH=$TAR_FILE" >> $GITHUB_ENV
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-asset
+          path: blender/${{ env.TAR_PATH }}
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.tag_name }}
+
+      - name: Get Short Hash & Date
+        id: vars
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "build_date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Setup Git LFS
+        run: |
+          git config lfs.url "https://projects.blender.org/blender/blender.git/info/lfs"
+          git config lfs.remote.searchall false
+          git lfs install
+
+      - name: Blender Make Update
+        run: make update
+
+      - name: Build Blender Release
+        run: make release ninja
+
+      - name: Package Release Asset
+        run: |
+          VERSION="4.5.9"
+          HASH="${{ steps.vars.outputs.sha_short }}"
+          DATE="${{ steps.vars.outputs.build_date }}"
+          ASSET_NAME="blender-$VERSION-npr-port-macos-$HASH-$DATE"
+          DMG_FILE="$ASSET_NAME.dmg"
+          APP_BUNDLE=$(find ../build_darwin_release -name "Blender.app" -type d | head -n 1)
+          if [ -z "$APP_BUNDLE" ]; then
+            echo "Blender.app not found!"
+            exit 1
+          fi
+          hdiutil create -format UDZO -srcfolder "$APP_BUNDLE" "$DMG_FILE"
+          echo "DMG_PATH=$DMG_FILE" >> $GITHUB_ENV
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-asset
+          path: ${{ env.DMG_PATH }}
+
+  publish:
+    name: Upload Assets to Existing Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve Tag
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ github.event.inputs.tag_name }}"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "No release tag was provided." >&2
+            exit 1
+          fi
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Ensure Release Exists
+        run: gh release view "${{ steps.vars.outputs.tag_name }}" --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Assets to Release
+        run: gh release upload "${{ steps.vars.outputs.tag_name }}" artifacts/* --clobber --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
