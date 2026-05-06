@@ -265,7 +265,7 @@ class PHYSICS_PT_rigid_body_collisions_collections(PHYSICS_PT_rigidbody_panel, P
 
 
 class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, Panel):
-    bl_label = "Disable Collision Collections"
+    bl_label = "Collision Mask"
     bl_parent_id = "PHYSICS_PT_rigid_body_collisions"
     bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {
@@ -289,8 +289,6 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
 
         layout.prop(rbo, "xf_col_group_idx", text="Collision Group")
 
-        layout.label(text="Collision Mask:")
-
         col = layout.column(align=True)
 
         c = col.row(align=True)
@@ -311,7 +309,28 @@ class PHYSICS_PT_rigid_body_xf_no_collision_objects(PHYSICS_PT_rigidbody_panel, 
 
         layout.operator("rigidbody.build_collision_mask")
 
-        layout.label(text="Disable Collision:")
+class PHYSICS_PT_rigid_body_xf_disable_collision(PHYSICS_PT_rigidbody_panel, Panel):
+    bl_label = "Disable Collision"
+    bl_parent_id = "PHYSICS_PT_rigid_body_collisions"
+    bl_options = {'DEFAULT_CLOSED'}
+    COMPAT_ENGINES = {
+        'BLENDER_RENDER',
+        'BLENDER_EEVEE_NEXT',
+        'BLENDER_WORKBENCH',
+    }
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj.parent is not None and obj.parent.rigid_body is not None:
+            return False
+        return (obj and obj.rigid_body and (context.engine in cls.COMPAT_ENGINES))
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        rbo = ob.rigid_body
 
         row = layout.row(align=True)
         row.enabled = not context.screen.is_animation_playing  # 播放动画时不让用户修改
@@ -423,6 +442,7 @@ classes = (
     PHYSICS_PT_rigid_body_dynamics_deactivation,
     PHYSICS_UL_no_collision_collection,
     PHYSICS_PT_rigid_body_xf_no_collision_objects,
+    PHYSICS_PT_rigid_body_xf_disable_collision,
 )
 
 if __name__ == "__main__":  # only for live edit.
