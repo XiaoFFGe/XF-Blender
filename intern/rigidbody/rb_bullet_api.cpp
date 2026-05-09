@@ -55,6 +55,9 @@
 #include <iostream>
 using namespace std;
 
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+
+// DynamicsWorld 结构体，Bullet 物理世界封装
 struct rbDynamicsWorld {
   btDiscreteDynamicsWorld *dynamicsWorld;
   btDefaultCollisionConfiguration *collisionConfiguration;
@@ -64,6 +67,8 @@ struct rbDynamicsWorld {
   btOverlapFilterCallback *filterCallback;
   int whitelist;
 };
+
+// RigidBody 结构体，Bullet 单个刚体封装
 struct rbRigidBody {
   btRigidBody *body;
   int col_groups;
@@ -98,46 +103,24 @@ struct rbCollisionShape {
 
 struct rbFilterCallback : public btOverlapFilterCallback {
   int whitelist;
-  bool (*noCollisionCallback)(const rbRigidBody *, const rbRigidBody *);
 
-  rbFilterCallback(int whitelist_val) : whitelist(whitelist_val), noCollisionCallback(nullptr) {}
 
-  bool checkNoCollisionBodies(const rbRigidBody *rb0, const rbRigidBody *rb1) const
-  {
-    for (int i = 0; i < rb0->no_collision_count; i++) {
-      if (rb0->no_collision_bodies[i] == rb1) {
-        return true;
-      }
-    }
-    for (int i = 0; i < rb1->no_collision_count; i++) {
-      if (rb1->no_collision_bodies[i] == rb0) {
-        return true;
-      }
-    }
-    return false;
+  rbFilterCallback(int whitelist_val) : whitelist(whitelist_val) {
   }
 
   bool needBroadphaseCollision(btBroadphaseProxy *proxy0, btBroadphaseProxy *proxy1) const override
+
   {
+
     rbRigidBody *rb0 = (rbRigidBody *)((btRigidBody *)proxy0->m_clientObject)->getUserPointer();
     rbRigidBody *rb1 = (rbRigidBody *)((btRigidBody *)proxy1->m_clientObject)->getUserPointer();
 
-    /* 1. 最高优先级：xf_no_collision_objects - 禁用掉多个碰撞 */
-    if (checkNoCollisionBodies(rb0, rb1)) {
-      return false;
-    }
-
-    if (noCollisionCallback && noCollisionCallback(rb0, rb1)) {
-      return false;
-    }
-
-    /* 2. collision_collections 系统 */
     bool collides;
     collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
     collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
     collides = collides && (rb0->col_groups & rb1->col_groups);
 
-    /* 使用 xf_col_group_whitelist 控制 collision_collections 的白名单/黑名单模式 */
+    
     if (whitelist) {
       return collides;
     }
@@ -180,8 +163,7 @@ rbDynamicsWorld *RB_dworld_new(const float gravity[3], int whitelist)
   world->filterCallback = new rbFilterCallback(whitelist);
   world->pairCache->getOverlappingPairCache()->setOverlapFilterCallback(world->filterCallback);
 
-  rbFilterCallback *filterCallback = static_cast<rbFilterCallback *>(world->filterCallback);
-  filterCallback->noCollisionCallback = nullptr;
+
 
   /* constraint solving */
   world->constraintSolver = new btSequentialImpulseConstraintSolver();
@@ -216,15 +198,7 @@ void RB_dworld_set_whitelist_mode(rbDynamicsWorld *world, int whitelist)
   }
 }
 
-void RB_dworld_set_no_collision_callback(rbDynamicsWorld *world,
-                                         bool (*callback)(const rbRigidBody *,
-                                                          const rbRigidBody *))
-{
-  if (world->filterCallback) {
-    rbFilterCallback *filterCallback = static_cast<rbFilterCallback *>(world->filterCallback);
-    filterCallback->noCollisionCallback = callback;
-  }
-}
+
 
 /* Settings ------------------------- */
 
@@ -406,7 +380,24 @@ rbRigidBody *RB_body_new(rbCollisionShape *shape, const float loc[3], const floa
 
 void RB_body_delete(rbRigidBody *object)
 {
+  if (!object) {
+    return;
+  }
+  
+  // 先清除 no_collision_bodies 关系，只处理能安全访问的
+  for (int i = 0; i < object->no_collision_count; i++) {
+    rbRigidBody *other = object->no_collision_bodies[i];
+    if (other && other->body && object->body) {
+      object->body->setIgnoreCollisionCheck(other->body, false);
+    }
+  }
+  
   btRigidBody *body = object->body;
+  if (!body) {
+    delete[] object->no_collision_bodies;
+    delete object;
+    return;
+  }
 
   /* motion state */
   btMotionState *ms = body->getMotionState();
@@ -435,13 +426,16 @@ void RB_body_delete(rbRigidBody *object)
 
 void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collision_body)
 {
+  if (!object || !object->body || !no_collision_body || !no_collision_body->body) {
+    return;
+  }
   for (int i = 0; i < object->no_collision_count; i++) {
     if (object->no_collision_bodies[i] == no_collision_body) {
       return;
     }
   }
 
-  if (object->no_collision_count >= object->no_collision_capacity) {
+  if (object->no_collision_count >= object->no_collision_capacity) { 
     int new_capacity = object->no_collision_capacity == 0 ? 4 : object->no_collision_capacity * 2;
     rbRigidBody **new_bodies = new rbRigidBody *[new_capacity];
     for (int i = 0; i < object->no_collision_count; i++) {
@@ -453,19 +447,33 @@ void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collisio
   }
 
   object->no_collision_bodies[object->no_collision_count++] = no_collision_body;
+
+  object->body->setIgnoreCollisionCheck(no_collision_body->body, true);
+  no_collision_body->body->setIgnoreCollisionCheck(object->body, true);
 }
 
 void RB_body_clear_no_collision_bodies(rbRigidBody *object)
 {
-  object->no_collision_count = 0;
+  if (!object || !object->body) {
+    return;
+  }
+  for (int i = 0; i < object->no_collision_count; i++) {
+    rbRigidBody *other = object->no_collision_bodies[i];
+    // 空指针检查，确保 other 和 other->body 都有效
+    if (other && other->body) {
+      // 只设置 object 到 other 的忽略关系为 false
+      object->body->setIgnoreCollisionCheck(other->body, false);
+    }
+  }
+  object->no_collision_count = 0; // 清空 no_collision_bodies 列表
 }
 
-void RB_body_set_xf_col_group_idx(rbRigidBody *object, int idx)
+void RB_body_set_xf_col_group_idx(rbRigidBody *object, int idx) // 设置 XF 碰撞组索引
 {
   object->xf_col_group_idx = idx;
 }
 
-void RB_body_set_xf_col_group_mask(rbRigidBody *object, int mask)
+void RB_body_set_xf_col_group_mask(rbRigidBody *object, int mask) // 设置 XF 碰撞组掩码
 {
   object->xf_col_group_mask = mask;
 }
@@ -1403,5 +1411,3 @@ void RB_constraint_set_target_velocity_motor(rbConstraint *con,
   constraint->getTranslationalLimitMotor()->m_targetVelocity.setX(velocity_lin);
   constraint->getRotationalLimitMotor(0)->m_targetVelocity = velocity_ang;
 }
-
-/* ********************************** */

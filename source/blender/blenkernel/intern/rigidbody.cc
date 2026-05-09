@@ -1774,7 +1774,6 @@ static void rigidbody_update_sim_ob(Depsgraph *depsgraph, Object *ob, RigidBodyO
               nc->ob->rigidbody_object->shared->physics_object);
           if (rb_other != nullptr) {
             RB_body_add_no_collision_body(rb, rb_other);
-            RB_body_add_no_collision_body(rb_other, rb);
           }
         }
       }
