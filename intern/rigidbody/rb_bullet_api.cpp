@@ -43,6 +43,7 @@
 #include <btBulletDynamicsCommon.h>
 
 #include <LinearMath/btConvexHullComputer.h>
+#include <LinearMath/btHashMap.h>
 #include <LinearMath/btMatrix3x3.h>
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btTransform.h>
@@ -74,9 +75,7 @@ struct rbRigidBody {
   int col_groups;
   int xf_col_group_idx;
   int xf_col_group_mask;
-  struct rbRigidBody **no_collision_bodies;
-  int no_collision_count;
-  int no_collision_capacity;
+  btHashMap<btHashPtr, rbRigidBody*> no_collision_bodies;
 };
 
 struct rbVert {
@@ -368,10 +367,6 @@ rbRigidBody *RB_body_new(rbCollisionShape *shape, const float loc[3], const floa
 
   object->body->setUserPointer(object);
 
-  object->no_collision_bodies = nullptr;
-  object->no_collision_count = 0;
-  object->no_collision_capacity = 0;
-
   object->xf_col_group_idx = 0;
   object->xf_col_group_mask = 0;
 
@@ -385,8 +380,8 @@ void RB_body_delete(rbRigidBody *object)
   }
   
   // 先清除 no_collision_bodies 关系，只处理能安全访问的
-  for (int i = 0; i < object->no_collision_count; i++) {
-    rbRigidBody *other = object->no_collision_bodies[i];
+  for (int i = 0; i < object->no_collision_bodies.size(); i++) {
+    rbRigidBody *other = *object->no_collision_bodies.getAtIndex(i);
     if (other && other->body && object->body) {
       object->body->setIgnoreCollisionCheck(other->body, false);
     }
@@ -394,7 +389,6 @@ void RB_body_delete(rbRigidBody *object)
   
   btRigidBody *body = object->body;
   if (!body) {
-    delete[] object->no_collision_bodies;
     delete object;
     return;
   }
@@ -418,9 +412,6 @@ void RB_body_delete(rbRigidBody *object)
 
   delete body;
 
-  /* free no_collision_bodies array */
-  delete[] object->no_collision_bodies;
-
   delete object;
 }
 
@@ -429,24 +420,12 @@ void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collisio
   if (!object || !object->body || !no_collision_body || !no_collision_body->body) {
     return;
   }
-  for (int i = 0; i < object->no_collision_count; i++) {
-    if (object->no_collision_bodies[i] == no_collision_body) {
-      return;
-    }
+  
+  if (object->no_collision_bodies.find(btHashPtr(no_collision_body)) != NULL) {
+    return;
   }
 
-  if (object->no_collision_count >= object->no_collision_capacity) { 
-    int new_capacity = object->no_collision_capacity == 0 ? 4 : object->no_collision_capacity * 2;
-    rbRigidBody **new_bodies = new rbRigidBody *[new_capacity];
-    for (int i = 0; i < object->no_collision_count; i++) {
-      new_bodies[i] = object->no_collision_bodies[i];
-    }
-    delete[] object->no_collision_bodies;
-    object->no_collision_bodies = new_bodies;
-    object->no_collision_capacity = new_capacity;
-  }
-
-  object->no_collision_bodies[object->no_collision_count++] = no_collision_body;
+  object->no_collision_bodies.insert(btHashPtr(no_collision_body), no_collision_body);
 
   object->body->setIgnoreCollisionCheck(no_collision_body->body, true);
   no_collision_body->body->setIgnoreCollisionCheck(object->body, true);
@@ -457,15 +436,13 @@ void RB_body_clear_no_collision_bodies(rbRigidBody *object)
   if (!object || !object->body) {
     return;
   }
-  for (int i = 0; i < object->no_collision_count; i++) {
-    rbRigidBody *other = object->no_collision_bodies[i];
-    // 空指针检查，确保 other 和 other->body 都有效
+  for (int i = 0; i < object->no_collision_bodies.size(); i++) {
+    rbRigidBody *other = *object->no_collision_bodies.getAtIndex(i);
     if (other && other->body) {
-      // 只设置 object 到 other 的忽略关系为 false
       object->body->setIgnoreCollisionCheck(other->body, false);
     }
   }
-  object->no_collision_count = 0; // 清空 no_collision_bodies 列表
+  object->no_collision_bodies.clear();
 }
 
 void RB_body_set_xf_col_group_idx(rbRigidBody *object, int idx) // 设置 XF 碰撞组索引
