@@ -57,9 +57,9 @@ else()
 endif()
 
 if(CPACK_OVERRIDE_PACKAGENAME)
-  set(CPACK_PACKAGE_FILE_NAME ${CPACK_OVERRIDE_PACKAGENAME}-${PACKAGE_ARCH})
+  set(CPACK_PACKAGE_FILE_NAME xf-${CPACK_OVERRIDE_PACKAGENAME}-${PACKAGE_ARCH})
 else()
-  set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME_LOWER}-${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}-git${CPACK_DATE}.${BUILD_REV}-${PACKAGE_ARCH})
+  set(CPACK_PACKAGE_FILE_NAME xf-${PROJECT_NAME_LOWER}-${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}-${PACKAGE_ARCH})
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -86,11 +86,12 @@ if(APPLE)
 endif()
 
 if(WIN32)
-  set(CPACK_PACKAGE_INSTALL_DIRECTORY "Blender Foundation/Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
-  set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Blender Foundation/Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "XF Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
+  set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "XF Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
 
   set(CPACK_NSIS_MUI_ICON ${CMAKE_SOURCE_DIR}/release/windows/icons/winblender.ico)
   set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+  set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 
   # Eventhough we no longer display this, we still need to set it otherwise it'll throw an error
   # during the msi build.
@@ -105,6 +106,8 @@ if(WIN32)
     TYPE SHA1 UPPER
   )
 
+  set(CPACK_PACKAGE_NAME "XF Blender 4.5")
+
   set(CPACK_WIX_TEMPLATE ${CMAKE_SOURCE_DIR}/release/windows/installer_wix/WIX.template)
   set(CPACK_WIX_UI_BANNER ${CMAKE_SOURCE_DIR}/release/windows/installer_wix/WIX_UI_BANNER.bmp)
   set(CPACK_WIX_UI_DIALOG ${CMAKE_SOURCE_DIR}/release/windows/installer_wix/WIX_UI_DIALOG.png)
@@ -113,8 +116,8 @@ if(WIN32)
   set(CPACK_WIX_LIGHT_EXTRA_FLAGS -dcl:medium)
 endif()
 
-set(CPACK_PACKAGE_EXECUTABLES "blender-launcher" "Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
-set(CPACK_CREATE_DESKTOP_LINKS "blender-launcher" "Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
+set(CPACK_PACKAGE_EXECUTABLES "blender-launcher" "XF Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
+set(CPACK_CREATE_DESKTOP_LINKS "blender-launcher" "XF Blender ${MAJOR_VERSION}.${MINOR_VERSION}")
 
 include(CPack)
 
