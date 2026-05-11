@@ -27,7 +27,7 @@ static const char *GetApplicationSupportDir(const char *versionstr,
 
     snprintf(tempPath,
              len_tempPath,
-             "%s/Blender/%s",
+             "%s/XF Blender/%s", // 这是XF Blender的目录名
              [basePath cStringUsingEncoding:NSASCIIStringEncoding],
              versionstr);
   }

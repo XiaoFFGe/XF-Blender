@@ -31,6 +31,7 @@ struct btCollisionShapeData;
 #include "LinearMath/btMotionState.h"
 #include "LinearMath/btAlignedAllocator.h"
 #include "LinearMath/btAlignedObjectArray.h"
+#include "LinearMath/btHashMap.h"
 
 typedef btAlignedObjectArray<class btCollisionObject*> btCollisionObjectArray;
 
@@ -115,7 +116,7 @@ protected:
 	/// If some object should have elaborate collision filtering by sub-classes
 	int m_checkCollideWith;
 
-	btAlignedObjectArray<const btCollisionObject*> m_objectsWithoutCollisionCheck;
+	btHashMap<btHashPtr, int> m_objectsWithoutCollisionCheck;
 
 	///internal update revision number. It will be increased when the object changes. This allows some subsystems to perform lazy evaluation.
 	int m_updateRevision;
@@ -237,16 +238,11 @@ public:
 	{
 		if (ignoreCollisionCheck)
 		{
-			//We don't check for duplicates. Is it ok to leave that up to the user of this API?
-			//int index = m_objectsWithoutCollisionCheck.findLinearSearch(co);
-			//if (index == m_objectsWithoutCollisionCheck.size())
-			//{
-			m_objectsWithoutCollisionCheck.push_back(co);
-			//}
+			m_objectsWithoutCollisionCheck.insert(btHashPtr(co), 1);
 		}
 		else
 		{
-			m_objectsWithoutCollisionCheck.remove(co);
+			m_objectsWithoutCollisionCheck.remove(btHashPtr(co));
 		}
 		m_checkCollideWith = m_objectsWithoutCollisionCheck.size() > 0;
 	}
@@ -258,17 +254,13 @@ public:
 
 	const btCollisionObject* getObjectWithoutCollision(int index)
 	{
-		return m_objectsWithoutCollisionCheck[index];
+		const btHashPtr& key = m_objectsWithoutCollisionCheck.getKeyAtIndex(index);
+		return static_cast<const btCollisionObject*>(key.getPointer());
 	}
 
 	virtual bool checkCollideWithOverride(const btCollisionObject* co) const
 	{
-		int index = m_objectsWithoutCollisionCheck.findLinearSearch(co);
-		if (index < m_objectsWithoutCollisionCheck.size())
-		{
-			return false;
-		}
-		return true;
+		return (m_objectsWithoutCollisionCheck.find(btHashPtr(co)) == NULL);
 	}
 
 	///Avoid using this internal API call, the extension pointer is used by some Bullet extensions.
