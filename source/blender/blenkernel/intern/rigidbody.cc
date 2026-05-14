@@ -1259,6 +1259,7 @@ RigidBodyOb *BKE_rigidbody_create_object(Scene *scene, Object *ob, short type)
   /* set default settings */
   rbo->type = type;
 
+  rbo->time_scale = 1.0f;
   rbo->mass = 1.0f;
 
   rbo->friction = 0.5f;    /* best when non-zero. 0.5 is Bullet default */
@@ -2096,6 +2097,22 @@ static void rigidbody_update_simulation_post_step(Depsgraph *depsgraph, RigidBod
   FOREACH_COLLECTION_OBJECT_RECURSIVE_BEGIN (rbw->group, ob) {
     Base *base = BKE_view_layer_base_find(view_layer, ob);
     RigidBodyOb *rbo = ob->rigidbody_object;
+
+    /* Apply per-rigidbody time scale for active objects. */
+    if (rbo && rbo->type == RBO_TYPE_ACTIVE && rbo->shared->physics_object &&
+        !compare_ff(rbo->time_scale, 1.0f, FLT_EPSILON))
+    {
+      float lin_vel[3], ang_vel[3];
+      RB_body_get_linear_velocity(static_cast<rbRigidBody *>(rbo->shared->physics_object), lin_vel);
+      RB_body_get_angular_velocity(static_cast<rbRigidBody *>(rbo->shared->physics_object), ang_vel);
+
+      mul_v3_fl(lin_vel, rbo->time_scale);
+      mul_v3_fl(ang_vel, rbo->time_scale);
+
+      RB_body_set_linear_velocity(static_cast<rbRigidBody *>(rbo->shared->physics_object), lin_vel);
+      RB_body_set_angular_velocity(static_cast<rbRigidBody *>(rbo->shared->physics_object), ang_vel);
+    }
+
     /* Reset kinematic state for transformed objects. */
     if (rbo && base && (base->flag & BASE_SELECTED) && (G.moving & G_TRANSFORM_OBJ) &&
         rbo->shared->physics_object)

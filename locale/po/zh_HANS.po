@@ -145,6 +145,10 @@ msgid "Collision Mask"
 msgstr "碰撞遮罩"
 
 
+msgid "Change the speed of the simulation for this rigid body"
+msgstr "更改此刚体的模拟速度"
+
+
 msgctxt "Operator"
 msgid "Selected Build Collision Mask"
 msgstr "从选择构建遮罩"
