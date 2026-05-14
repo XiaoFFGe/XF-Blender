@@ -143,6 +143,8 @@ typedef struct RigidBodyOb {
   struct ListBase xf_no_collision_objects;
 
   /* Physics Parameters */
+  /** Used to speed up or slow down the simulation for this rigid body. */
+  float time_scale;
   /** How much object 'weighs' (i.e. absolute 'amount of stuff' it holds). */
   float mass;
 
@@ -170,7 +172,7 @@ typedef struct RigidBodyOb {
   float pos[3];
   char _pad1[4];
 
-  char _pad2[16]; /* 为将来使用保留的填充字节 */
+  char _pad2[12]; /* 为将来使用保留的填充字节 */
 
   /** This pointer is shared between all evaluated copies. */
   struct RigidBodyOb_Shared *shared;

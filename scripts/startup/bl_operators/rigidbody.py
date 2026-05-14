@@ -350,8 +350,6 @@ class RemoveNoCollisionCollectionFromRigidBody(Operator):
         return {'FINISHED'}
 
 # 从选择构建遮罩
-
-
 class BuildCollisionMaskFromRigidBody(Operator):
     """Selected Build collision mask from rigid body"""
     bl_idname = "rigidbody.build_collision_mask"

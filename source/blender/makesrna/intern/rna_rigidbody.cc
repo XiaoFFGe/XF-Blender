@@ -363,6 +363,13 @@ static void rna_RigidBodyOb_disabled_set(PointerRNA *ptr, bool value)
 #  endif
 }
 
+static void rna_RigidBodyOb_time_scale_set(PointerRNA *ptr, float value)
+{
+  RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
+
+  rbo->time_scale = value;
+}
+
 static void rna_RigidBodyOb_mass_set(PointerRNA *ptr, float value)
 {
   RigidBodyOb *rbo = (RigidBodyOb *)ptr->data;
@@ -1192,6 +1199,15 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
 
   /* Physics Parameters */
+  prop = RNA_def_property(srna, "time_scale", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, nullptr, "time_scale");
+  RNA_def_property_range(prop, 0.0f, 100.0f);
+  RNA_def_property_ui_range(prop, 0.0f, 10.0f, 1, 3);
+  RNA_def_property_float_default(prop, 1.0f);
+  RNA_def_property_float_funcs(prop, nullptr, "rna_RigidBodyOb_time_scale_set", nullptr);
+  RNA_def_property_ui_text(prop, "Time Scale", "Change the speed of the simulation for this rigid body");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+
   prop = RNA_def_property(srna, "mass", PROP_FLOAT, PROP_UNIT_MASS);
   RNA_def_property_float_sdna(prop, nullptr, "mass");
   RNA_def_property_range(prop, 0.001f, FLT_MAX); /* range must always be positive (and non-zero) */
