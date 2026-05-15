@@ -149,6 +149,10 @@ msgid "Change the speed of the simulation for this rigid body"
 msgstr "更改此刚体的模拟速度"
 
 
+msgid "Influence of global gravity on this rigid body (0 = no gravity, 1 = full gravity)"
+msgstr "局重力对该刚体的影响（0 = 无重力，1 = 完全重力）"
+
+
 msgctxt "Operator"
 msgid "Selected Build Collision Mask"
 msgstr "从选择构建遮罩"

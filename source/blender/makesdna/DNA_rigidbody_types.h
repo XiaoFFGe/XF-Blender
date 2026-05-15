@@ -161,6 +161,9 @@ typedef struct RigidBodyOb {
   /** Damping for angular velocities. */
   float ang_damping;
 
+  /** Gravity influence for this rigid body (0.0 - 1.0). */
+  float gravity;
+
   /** Deactivation threshold for linear velocities. */
   float lin_sleep_thresh;
   /** Deactivation threshold for angular velocities. */
@@ -172,7 +175,7 @@ typedef struct RigidBodyOb {
   float pos[3];
   char _pad1[4];
 
-  char _pad2[12]; /* 为将来使用保留的填充字节 */
+  char _pad2[8]; /* 为将来使用保留的填充字节 */
 
   /** This pointer is shared between all evaluated copies. */
   struct RigidBodyOb_Shared *shared;

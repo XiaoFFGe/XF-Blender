@@ -379,6 +379,9 @@ class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
         col.prop(rbo, "time_scale", text="Speed")
 
         col = flow.column()
+        col.prop(rbo, "gravity", text="Gravity")
+
+        col = flow.column()
         col.prop(rbo, "linear_damping", text="Damping Translation")
 
         col = flow.column()
