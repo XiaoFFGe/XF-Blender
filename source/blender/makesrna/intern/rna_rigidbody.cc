@@ -1279,6 +1279,14 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
       prop, "Angular Damping", "Amount of angular velocity that is lost over time");
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
 
+  prop = RNA_def_property(srna, "gravity", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "gravity");
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_float_default(prop, 1.0f);
+  RNA_def_property_ui_text(
+      prop, "Gravity", "Influence of global gravity on this rigid body (0 = no gravity, 1 = full gravity)");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+
   /* Collision Parameters - Surface Parameters */
   prop = RNA_def_property(srna, "friction", PROP_FLOAT, PROP_FACTOR);
   RNA_def_property_float_sdna(prop, nullptr, "friction");

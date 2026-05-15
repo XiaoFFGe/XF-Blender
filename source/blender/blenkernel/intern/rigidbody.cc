@@ -1273,6 +1273,8 @@ RigidBodyOb *BKE_rigidbody_create_object(Scene *scene, Object *ob, short type)
   rbo->lin_damping = 0.04f;
   rbo->ang_damping = 0.1f;
 
+  rbo->gravity = 1.0f; /* full gravity influence by default */
+
   rbo->col_groups = 0;
 
   /* use triangle meshes for passive objects
@@ -2014,11 +2016,36 @@ static void rigidbody_update_external_forces(Depsgraph *depsgraph,
                                              Scene *scene,
                                              RigidBodyWorld *rbw)
 {
+  /* get world gravity */
+  float world_gravity[3];
+  if (rbw->shared->runtime->physics_world) {
+    RB_dworld_get_gravity(rbw->shared->runtime->physics_world, world_gravity);
+  }
+  else {
+    zero_v3(world_gravity);
+  }
+
   FOREACH_COLLECTION_OBJECT_RECURSIVE_BEGIN (rbw->group, ob) {
     /* only update if rigid body exists */
     RigidBodyOb *rbo = ob->rigidbody_object;
     if (ob->type != OB_MESH || rbo->shared->physics_object == nullptr) {
       continue;
+    }
+
+    /* Apply per-body gravity weight */
+    if (rbo->type == RBO_TYPE_ACTIVE && (rbo->flag & RBO_FLAG_DISABLED) == 0 &&
+        rbo->gravity != 1.0f && !is_zero_v3(world_gravity))
+    {
+      float gravity_force[3];
+      float mass = RB_body_get_mass(static_cast<rbRigidBody *>(rbo->shared->physics_object));
+      /* Calculate the additional gravity force needed to achieve the desired gravity influence */
+      /* If gravity < 1.0, we need to reduce the effective gravity */
+      /* If gravity > 1.0, we need to increase the effective gravity */
+      float gravity_factor = rbo->gravity - 1.0f;
+      copy_v3_v3(gravity_force, world_gravity);
+      mul_v3_fl(gravity_force, gravity_factor * mass);
+      RB_body_apply_central_force(static_cast<rbRigidBody *>(rbo->shared->physics_object),
+                                  gravity_force);
     }
 
     /* update influence of effectors - but don't do it on an effector */
