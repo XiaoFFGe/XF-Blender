@@ -152,6 +152,26 @@ msgstr "更改此刚体的模拟速度"
 msgid "Influence of global gravity on this rigid body (0 = no gravity, 1 = full gravity)"
 msgstr "局重力对该刚体的影响（0 = 无重力，1 = 完全重力）"
 
+msgid "Use CCD"
+msgstr "使用CCD"
+
+msgid "Enable continuous collision detection to prevent fast-moving objects from passing through"
+msgstr "启用连续碰撞检测，防止高速物体穿透"
+
+msgid "Default motion threshold for CCD (object moving more than this per frame will trigger CCD)"
+msgstr "CCD默认运动阈值（物体每帧移动超过此值将触发CCD）"
+
+msgid "Swept Sphere Radius"
+msgstr "扫掠球半径"
+
+msgid "Default radius of swept sphere for CCD (0 = auto-calculate from collision shape)"
+msgstr "CCD扫掠球默认半径（0=根据碰撞形状自动计算）"
+
+msgid "Motion threshold for CCD (0 = use world default, object moving more than this per frame will trigger CCD)"
+msgstr "CCD运动阈值（0=使用世界默认值，物体每帧移动超过此值将触发CCD）"
+
+msgid "Radius of swept sphere for CCD (0 = use world default, 0 = auto-calculate from collision shape)"
+msgstr "CCD扫掠球半径（0=使用世界默认值，0=根据碰撞形状自动计算）"
 
 msgctxt "Operator"
 msgid "Selected Build Collision Mask"

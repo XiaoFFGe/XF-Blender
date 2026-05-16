@@ -184,6 +184,38 @@ static void rna_RigidBodyWorld_split_impulse_set(PointerRNA *ptr, bool value)
 #  endif
 }
 
+static void rna_RigidBodyWorld_use_ccd_set(PointerRNA *ptr, bool value)
+{
+  RigidBodyWorld *rbw = (RigidBodyWorld *)ptr->data;
+
+  SET_FLAG_FROM_TEST(rbw->flag, value, RBW_FLAG_USE_CCD);
+
+#  ifdef WITH_BULLET
+  rbDynamicsWorld *physics_world = BKE_rigidbody_world_physics(rbw);
+  if (physics_world && rbw->objects) {
+    for (int i = 0; i < rbw->numbodies; i++) {
+      Object *ob = rbw->objects[i];
+      if (ob && ob->rigidbody_object && ob->rigidbody_object->shared->physics_object) {
+        rbRigidBody *rb = static_cast<rbRigidBody *>(ob->rigidbody_object->shared->physics_object);
+        if (value) {
+          float motion_threshold = (ob->rigidbody_object->ccd_motion_threshold > 0.0f) ?
+                                    ob->rigidbody_object->ccd_motion_threshold :
+                                    rbw->ccd_motion_threshold;
+          float swept_radius = (ob->rigidbody_object->ccd_swept_sphere_radius > 0.0f) ?
+                                ob->rigidbody_object->ccd_swept_sphere_radius :
+                                rbw->ccd_swept_sphere_radius;
+          RB_body_set_ccd_motion_threshold(rb, motion_threshold);
+          RB_body_set_ccd_swept_sphere_radius(rb, swept_radius);
+        }
+        else {
+          RB_body_set_ccd_motion_threshold(rb, 0.0f);
+        }
+      }
+    }
+  }
+#  endif
+}
+
 static void rna_RigidBodyWorld_objects_collection_update(Main *bmain,
                                                          Scene *scene,
                                                          PointerRNA *ptr)
@@ -1057,6 +1089,40 @@ static void rna_def_rigidbody_world(BlenderRNA *brna)
       "stability a little so use only when necessary)");
   RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_reset");
 
+  /* use ccd */
+  prop = RNA_def_property(srna, "use_ccd", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", RBW_FLAG_USE_CCD);
+  RNA_def_property_boolean_funcs(prop, nullptr, "rna_RigidBodyWorld_use_ccd_set");
+  RNA_def_property_ui_text(
+      prop,
+      "Use CCD",
+      "Enable continuous collision detection to prevent fast-moving objects from passing through");
+  RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_reset");
+
+  /* ccd motion threshold */
+  prop = RNA_def_property(srna, "ccd_motion_threshold", PROP_FLOAT, PROP_UNIT_LENGTH);
+  RNA_def_property_float_sdna(prop, nullptr, "ccd_motion_threshold");
+  RNA_def_property_range(prop, 0.0f, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0f, 1.0f, 0.01, 4);
+  RNA_def_property_float_default(prop, 0.1f);
+  RNA_def_property_ui_text(
+      prop,
+      "CCD Motion Threshold",
+      "Default motion threshold for CCD (object moving more than this per frame will trigger CCD)");
+  RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_reset");
+
+  /* ccd swept sphere radius */
+  prop = RNA_def_property(srna, "ccd_swept_sphere_radius", PROP_FLOAT, PROP_UNIT_LENGTH);
+  RNA_def_property_float_sdna(prop, nullptr, "ccd_swept_sphere_radius");
+  RNA_def_property_range(prop, 0.0f, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0f, 0.5f, 0.01, 4);
+  RNA_def_property_float_default(prop, 0.0f);
+  RNA_def_property_ui_text(
+      prop,
+      "CCD Swept Sphere Radius",
+      "Default radius of swept sphere for CCD (0 = auto-calculate from collision shape)");
+  RNA_def_property_update(prop, NC_SCENE, "rna_RigidBodyWorld_reset");
+
   /* cache */
   prop = RNA_def_property(srna, "point_cache", PROP_POINTER, PROP_NONE);
   RNA_def_property_flag(prop, PROP_NEVER_NULL);
@@ -1373,6 +1439,29 @@ static void rna_def_rigidbody_object(BlenderRNA *brna)
   RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_no_collision_update");
   RNA_def_property_flag(prop, PROP_LIB_EXCEPTION);
   rna_def_rigidbody_no_collision_objects(brna, prop);
+
+  /* CCD Parameters */
+  prop = RNA_def_property(srna, "ccd_motion_threshold", PROP_FLOAT, PROP_UNIT_LENGTH);
+  RNA_def_property_float_sdna(prop, nullptr, "ccd_motion_threshold");
+  RNA_def_property_range(prop, 0.0f, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0f, 1.0f, 0.01, 4);
+  RNA_def_property_float_default(prop, 0.0f);
+  RNA_def_property_ui_text(
+      prop,
+      "CCD Motion Threshold",
+      "Motion threshold for CCD (0 = use world default, object moving more than this per frame will trigger CCD)");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
+
+  prop = RNA_def_property(srna, "ccd_swept_sphere_radius", PROP_FLOAT, PROP_UNIT_LENGTH);
+  RNA_def_property_float_sdna(prop, nullptr, "ccd_swept_sphere_radius");
+  RNA_def_property_range(prop, 0.0f, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0f, 0.5f, 0.01, 4);
+  RNA_def_property_float_default(prop, 0.0f);
+  RNA_def_property_ui_text(
+      prop,
+      "CCD Swept Sphere Radius",
+      "Radius of swept sphere for CCD (0 = use world default, 0 = auto-calculate from collision shape)");
+  RNA_def_property_update(prop, NC_OBJECT | ND_POINTCACHE, "rna_RigidBodyOb_reset");
 
   prop = RNA_def_property(srna, "xf_no_collision_objects_index", PROP_INT, PROP_NONE);
   RNA_def_property_int_sdna(prop, nullptr, "xf_no_collision_objects_index");

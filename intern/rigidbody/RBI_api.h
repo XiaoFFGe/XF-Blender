@@ -375,6 +375,14 @@ void RB_constraint_set_solver_iterations(rbConstraint *con, int num_solver_itera
 void RB_constraint_set_breaking_threshold(rbConstraint *con, float threshold);
 
 /* ********************************** */
+/* CCD Settings */
+
+void RB_body_set_ccd_motion_threshold(rbRigidBody *object, float threshold);
+void RB_body_set_ccd_swept_sphere_radius(rbRigidBody *object, float radius);
+float RB_body_get_ccd_motion_threshold(rbRigidBody *object);
+float RB_body_get_ccd_swept_sphere_radius(rbRigidBody *object);
+
+/* ********************************** */
 
 #ifdef __cplusplus
 }

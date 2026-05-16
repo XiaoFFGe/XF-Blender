@@ -342,6 +342,35 @@ class PHYSICS_PT_rigid_body_xf_disable_collision(PHYSICS_PT_rigidbody_panel, Pan
         col.operator("rigidbody.add_no_collision_collection", text="", icon='ADD')
         col.operator("rigidbody.remove_no_collision_collection", text="", icon='REMOVE')
 
+class PHYSICS_PT_rigid_body_ccd(PHYSICS_PT_rigidbody_panel, Panel):
+    bl_label = "CCD"
+    bl_parent_id = "PHYSICS_PT_rigid_body"
+    bl_options = {'DEFAULT_CLOSED'}
+    COMPAT_ENGINES = {
+        'BLENDER_RENDER',
+        'BLENDER_EEVEE_NEXT',
+        'BLENDER_WORKBENCH',
+    }
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj.parent is not None and obj.parent.rigid_body is not None:
+            return False
+        return (
+            obj and obj.rigid_body and obj.rigid_body.type == 'ACTIVE' and
+            (context.engine in cls.COMPAT_ENGINES)
+        )
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        rbo = ob.rigid_body
+
+        layout.prop(rbo, "ccd_motion_threshold", text="Motion Threshold")
+        layout.prop(rbo, "ccd_swept_sphere_radius", text="Swept Sphere Radius")
+
 
 class PHYSICS_PT_rigid_body_dynamics(PHYSICS_PT_rigidbody_panel, Panel):
     bl_label = "Dynamics"
@@ -446,6 +475,7 @@ classes = (
     PHYSICS_PT_rigid_body_dynamics,
     PHYSICS_PT_rigid_body_dynamics_deactivation,
     PHYSICS_UL_no_collision_collection,
+    PHYSICS_PT_rigid_body_ccd,
     PHYSICS_PT_rigid_body_xf_no_collision_objects,
     PHYSICS_PT_rigid_body_xf_disable_collision,
 )

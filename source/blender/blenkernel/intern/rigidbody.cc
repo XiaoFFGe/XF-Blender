@@ -773,6 +773,24 @@ static void rigidbody_validate_sim_object(RigidBodyWorld *rbw, Object *ob, bool 
     RB_body_set_mass(static_cast<rbRigidBody *>(rbo->shared->physics_object), RBO_GET_MASS(rbo));
     RB_body_set_kinematic_state(static_cast<rbRigidBody *>(rbo->shared->physics_object),
                                 rbo->flag & RBO_FLAG_KINEMATIC || rbo->flag & RBO_FLAG_DISABLED);
+
+    /* Apply CCD settings */
+    if (rbw && (rbw->flag & RBW_FLAG_USE_CCD)) {
+      float motion_threshold = (rbo->ccd_motion_threshold > 0.0f) ? 
+                                rbo->ccd_motion_threshold : rbw->ccd_motion_threshold;
+      float swept_radius = (rbo->ccd_swept_sphere_radius > 0.0f) ? 
+                           rbo->ccd_swept_sphere_radius : rbw->ccd_swept_sphere_radius;
+
+      RB_body_set_ccd_motion_threshold(static_cast<rbRigidBody *>(rbo->shared->physics_object),
+                                        motion_threshold);
+      RB_body_set_ccd_swept_sphere_radius(static_cast<rbRigidBody *>(rbo->shared->physics_object),
+                                           swept_radius);
+    }
+    else {
+      /* CCD disabled, set to 0 to turn off */
+      RB_body_set_ccd_motion_threshold(static_cast<rbRigidBody *>(rbo->shared->physics_object),
+                                        0.0f);
+    }
   }
 
   if (rbw && rbw->shared->runtime->physics_world && rbo->shared->physics_object) {
@@ -1188,6 +1206,10 @@ RigidBodyWorld *BKE_rigidbody_create_world(Scene *scene)
   rbw->num_solver_iterations = 10; /* 10 is bullet default */
   rbw->xf_col_group_whitelist = 0;
 
+  /* CCD defaults */
+  rbw->ccd_motion_threshold = 0.1f;
+  rbw->ccd_swept_sphere_radius = 0.0f;
+
   rbw->shared->pointcache = BKE_ptcache_add(&(rbw->shared->ptcaches));
   rbw->shared->pointcache->step = 1;
 
@@ -1288,6 +1310,10 @@ RigidBodyOb *BKE_rigidbody_create_object(Scene *scene, Object *ob, short type)
   }
 
   rbo->mesh_source = RBO_MESH_DEFORM;
+
+  /* CCD defaults */
+  rbo->ccd_motion_threshold = 0.0f; /* Use world default */
+  rbo->ccd_swept_sphere_radius = 0.0f; /* Use world default */
 
   /* set initial transform */
   mat4_to_loc_quat(rbo->pos, rbo->orn, ob->object_to_world().ptr());

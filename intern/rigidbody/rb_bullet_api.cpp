@@ -415,6 +415,40 @@ void RB_body_delete(rbRigidBody *object)
   delete object;
 }
 
+/* CCD Settings */
+
+void RB_body_set_ccd_motion_threshold(rbRigidBody *object, float threshold)
+{
+  if (!object || !object->body) {
+    return;
+  }
+  object->body->setCcdMotionThreshold(threshold);
+}
+
+void RB_body_set_ccd_swept_sphere_radius(rbRigidBody *object, float radius)
+{
+  if (!object || !object->body) {
+    return;
+  }
+  object->body->setCcdSweptSphereRadius(radius);
+}
+
+float RB_body_get_ccd_motion_threshold(rbRigidBody *object)
+{
+  if (!object || !object->body) {
+    return 0.0f;
+  }
+  return (float)object->body->getCcdMotionThreshold();
+}
+
+float RB_body_get_ccd_swept_sphere_radius(rbRigidBody *object)
+{
+  if (!object || !object->body) {
+    return 0.0f;
+  }
+  return (float)object->body->getCcdSweptSphereRadius();
+}
+
 void RB_body_add_no_collision_body(rbRigidBody *object, rbRigidBody *no_collision_body)
 {
   if (!object || !object->body || !no_collision_body || !no_collision_body->body) {

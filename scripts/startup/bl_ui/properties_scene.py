@@ -390,6 +390,24 @@ class SCENE_PT_rigid_body_world_settings(RigidBodySubPanel, Panel):
             col.prop(rbw, "substeps_per_frame")
             col.prop(rbw, "solver_iterations")
 
+class SCENE_PT_rigid_body_world_ccd(RigidBodySubPanel, Panel):
+    bl_label = "CCD"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        scene = context.scene
+        rbw = scene.rigidbody_world
+
+        if rbw:
+            col = layout.column()
+            col.prop(rbw, "use_ccd", text="Use CCD")
+
+            col = layout.column()
+            col.prop(rbw, "ccd_motion_threshold", text="Motion Threshold")
+            col.prop(rbw, "ccd_swept_sphere_radius", text="Swept Sphere Radius")
 
 class SCENE_PT_rigid_body_cache(RigidBodySubPanel, Panel):
     bl_label = "Cache"
@@ -483,6 +501,7 @@ classes = (
     SCENE_PT_eevee_next_light_probes,
     SCENE_PT_animation,
     SCENE_PT_custom_props,
+    SCENE_PT_rigid_body_world_ccd,
 )
 
 if __name__ == "__main__":  # only for live edit.

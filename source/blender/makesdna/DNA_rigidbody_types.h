@@ -71,6 +71,12 @@ typedef struct RigidBodyWorld {
   int flag;
   /** Used to speed up or slow down the simulation. */
   float time_scale;
+
+  /* CCD Settings */
+  /** Default CCD motion threshold for all bodies in this world. */
+  float ccd_motion_threshold;
+  /** Default CCD swept sphere radius for all bodies in this world. */
+  float ccd_swept_sphere_radius;
 } RigidBodyWorld;
 
 /** RigidBodyWorld.flag */
@@ -81,6 +87,8 @@ typedef enum eRigidBodyWorld_Flag {
   /* RBW_FLAG_NEEDS_REBUILD = (1 << 1), */ /* UNUSED */
   /** Use split impulse when stepping the simulation. */
   RBW_FLAG_USE_SPLIT_IMPULSE = (1 << 2),
+  /** Use continuous collision detection. */
+  RBW_FLAG_USE_CCD = (1 << 3),
 } eRigidBodyWorld_Flag;
 
 /* ******************************** */
@@ -174,6 +182,12 @@ typedef struct RigidBodyOb {
   /** Rigid body position. */
   float pos[3];
   char _pad1[4];
+
+  /* CCD Settings */
+  /** Continuous collision detection motion threshold. */
+  float ccd_motion_threshold;
+  /** Continuous collision detection swept sphere radius. */
+  float ccd_swept_sphere_radius;
 
   char _pad2[8]; /* 为将来使用保留的填充字节 */
 
